@@ -1,0 +1,19 @@
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+.env
+
+# Customize
+/.vscode
+/vendor
+.env*
+!.env.example
+!.env.test.example
+deploy_*
+assets/platforms.json
+debug
