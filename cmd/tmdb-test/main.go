@@ -3,11 +3,14 @@ package main
 import (
 	"fmt"
 
+	"github.com/kunhou/TMDB/config"
 	"github.com/ryanbradynd05/go-tmdb"
 )
 
+var cfg = config.GetConfig()
+
 func main() {
-	client := tmdb.Init("df62c2ec98e3366767d418bae01180fa")
+	client := tmdb.Init(cfg.TMDBToken)
 	var options = make(map[string]string)
 	options["language"] = "zh-TW"
 	fightClubInfo, err := client.DiscoverMovie(options)

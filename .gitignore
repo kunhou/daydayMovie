@@ -15,5 +15,7 @@
 !.env.example
 !.env.test.example
 deploy_*
+run*
 assets/platforms.json
 debug
+ngrok

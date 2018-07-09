@@ -6,7 +6,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/kunhou/TMDB/config"
-	"github.com/mlytics/micro-dns/log"
+	"github.com/kunhou/TMDB/log"
 
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
@@ -23,7 +23,13 @@ func init() {
 
 // NewGorm creates a gorm DB instance
 func NewGorm() *gorm.DB {
-	dbConfig := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable port=%s sslrootcert=", cfg.Host, cfg.User, cfg.Password, cfg.DataBase, cfg.Port)
+	connStr := "host=%s user=%s password=%s dbname=%s port=%s sslmode=disable sslrootcert="
+	if cfg.SSLEnable {
+		connStr += fmt.Sprintf("sslmode=require sslrootcert=%s", cfg.SSLPath)
+	} else {
+		connStr += "sslmode=disable"
+	}
+	dbConfig := fmt.Sprintf(connStr, cfg.Host, cfg.User, cfg.Password, cfg.DataBase, cfg.Port)
 	db, err := gorm.Open("postgres", dbConfig)
 	if err != nil {
 		log.WithError(err).Error("Connect Database Failed")

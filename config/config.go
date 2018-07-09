@@ -10,12 +10,16 @@ type Config struct {
 	Debug     bool
 	Host      string
 	JWTSecret string
+	Level     string
+	TMDBToken string
 	DB        struct {
-		Host     string
-		Port     string
-		DataBase string
-		User     string
-		Password string
+		Host      string
+		Port      string
+		DataBase  string
+		User      string
+		Password  string
+		SSLEnable bool
+		SSLPath   string
 	}
 	Google struct {
 		ClientID     string
@@ -35,6 +39,8 @@ func init() {
 	conf.Debug = getEnvBool("DEBUG", false)
 	conf.Host = getEnv("HOST")
 	conf.JWTSecret = getEnv("JWT_SECRET")
+	conf.Level = getEnv("LEVEL")
+	conf.TMDBToken = getEnv("TMDB_TOKEN")
 }
 
 // GetConfig get all config
@@ -48,6 +54,8 @@ func (c *Config) setDBsetting() {
 	c.DB.DataBase = getEnv("POSTGRES_DBNAME")
 	c.DB.User = getEnv("POSTGRES_USER")
 	c.DB.Password = getEnv("POSTGRES_PASSWORD")
+	c.DB.SSLEnable = getEnvBool("SSL_ENABLE", false)
+	c.DB.SSLPath = getEnvWithDefault("POSTGRES_SSL", "")
 }
 
 func (c *Config) setLoginKey() {
