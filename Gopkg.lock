@@ -65,6 +65,12 @@
   revision = "53e6ce116135b80d037921a7fdd5138cf32d7a8a"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/jasonlvhit/gocron"
+  packages = ["."]
+  revision = "54194c9749d48b073c9aeb2c787b6882e95dd0cd"
+
+[[projects]]
   name = "github.com/jinzhu/gorm"
   packages = [
     ".",
@@ -96,10 +102,10 @@
   version = "v0.0.3"
 
 [[projects]]
-  name = "github.com/ryanbradynd05/go-tmdb"
+  name = "github.com/pkg/errors"
   packages = ["."]
-  revision = "5ab02a0655163a69d643172556bda2b05c676e44"
-  version = "1.0.0"
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
@@ -126,7 +132,7 @@
     "context",
     "context/ctxhttp"
   ]
-  revision = "c21de06aaf072cea07f3a65d6970e5c7d8b6cd6d"
+  revision = "039a4258aec0ad3c79b905677cceeab13b296a77"
 
 [[projects]]
   branch = "master"
@@ -159,7 +165,7 @@
     "googleapi/internal/uritemplates",
     "oauth2/v2"
   ]
-  revision = "ac730e38c5514b49097b1459b3acbe1bf905e930"
+  revision = "1d2d9cc0ae74226e8076e2a87e211c8fea38a160"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -193,6 +199,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1a675b70323f092e2b97b1fa67e5368f127a320a8e6aeafe012666c8a3b42392"
+  inputs-digest = "ee5121f361a34ed2914871118e2ee5fa43019dc1296e8234ad6c8d07ffa1c9dc"
   solver-name = "gps-cdcl"
   solver-version = 1
