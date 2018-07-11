@@ -17,5 +17,5 @@
 deploy_*
 run*
 assets/platforms.json
-debug
+debug*
 ngrok

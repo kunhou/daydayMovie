@@ -24,7 +24,7 @@ func NewGin() *gin.Engine {
 
 func Setting() *gin.Engine {
 	router := NewGin()
-	router.LoadHTMLGlob("cmd/movie/*")
+	router.LoadHTMLGlob(cfg.TempPath)
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", nil)
 	})

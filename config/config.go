@@ -12,6 +12,7 @@ type Config struct {
 	JWTSecret string
 	Level     string
 	TMDBToken string
+	TempPath  string
 	DB        struct {
 		Host      string
 		Port      string
@@ -41,6 +42,7 @@ func init() {
 	conf.JWTSecret = getEnv("JWT_SECRET")
 	conf.Level = getEnv("LEVEL")
 	conf.TMDBToken = getEnv("TMDB_TOKEN")
+	conf.TempPath = getEnv("TEMPLATE_PATH")
 }
 
 // GetConfig get all config

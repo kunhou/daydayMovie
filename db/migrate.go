@@ -11,7 +11,8 @@ import (
 
 type Movie struct {
 	ID               uint          `json:"-" gorm:"primary_key"`
-	TmdbID           uint          `json:"-" gorm:"column:tmdb_id;not null;unique_index"`
+	ProviderID       uint          `json:"-" gorm:"column:provider_id;not null;unique_index:idx_provider_movie"`
+	Provider         string        `json:"provider" gorm:"type:varchar(127);not null;unique_index:idx_provider_movie"`
 	Title            string        `json:"title" gorm:"type:varchar(255);not null;index"`
 	OriginalTitle    string        `json:"originalTitle" gorm:"type:varchar(255);not null;index"`
 	Popularity       float32       `json:"popularity"`
@@ -24,14 +25,15 @@ type Movie struct {
 	Adult            bool          `json:"adult" gorm:"not null"`
 	Overview         string        `json:"overview" gorm:"type:text;not null"`
 	ReleaseDate      time.Time     `json:"releaseDate" gorm:"type:timestamp without time zone"`
-	People           []Person      `gorm:"many2many:movie_people;association_foreignkey:tmdbID;foreignkey:tmdbID"`
+	People           []Person      `gorm:"many2many:movie_people;association_foreignkey:id;foreignkey:id"`
 	CreatedAt        time.Time     `json:"createdAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 	UpdatedAt        time.Time     `json:"updatedAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 }
 
 type Person struct {
 	ID           uint           `json:"-" gorm:"primary_key"`
-	TmdbID       uint           `json:"-" gorm:"column:tmdb_id;not null;unique_index"`
+	ProviderID   uint           `json:"-" gorm:"column:provider_id;not null;unique_index:idx_provider_person"`
+	Provider     string         `json:"provider" gorm:"type:varchar(127);not null;unique_index:idx_provider_person"`
 	Birthday     time.Time      `json:"birthday" gorm:"type:timestamp without time zone;"`
 	Deathday     time.Time      `json:"deathday" gorm:"type:timestamp without time zone;"`
 	Gender       uint8          `json:"gender" gorm:"not null"`
@@ -42,7 +44,7 @@ type Person struct {
 	ImdbID       string         `json:"imdbID" gorm:"type:varchar(127);not null"`
 	Homepage     string         `json:"homepage" gorm:"type:varchar(255);not null"`
 	AlsoKnownAs  pq.StringArray `json:"alsoKnownAs,omitempty" gorm:"type:varchar(127)[];not null"` // {"HTTP", "HTTPS"}
-	Movies       []Movie        `gorm:"many2many:movie_people;association_foreignkey:tmdbID;foreignkey:tmdbID"`
+	Movies       []Movie        `gorm:"many2many:movie_people;association_foreignkey:id;foreignkey:id"`
 	CreatedAt    time.Time      `json:"createdAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 	UpdatedAt    time.Time      `json:"updatedAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 }
@@ -59,8 +61,8 @@ func Migrate(rollback int) {
 		if err := tx.AutoMigrate(&Movie{}, &Person{}).Error; err != nil {
 			return err
 		}
-		if err := tx.Table("movie_people").AddForeignKey("movie_tmdb_id", "movies(tmdb_id)", "CASCADE", "NO ACTION").
-			AddForeignKey("person_tmdb_id", "people(tmdb_id)", "CASCADE", "NO ACTION").Error; err != nil {
+		if err := tx.Table("movie_people").AddForeignKey("movie_id", "movies(id)", "CASCADE", "NO ACTION").
+			AddForeignKey("person_id", "people(id)", "CASCADE", "NO ACTION").Error; err != nil {
 			return err
 		}
 		return nil
