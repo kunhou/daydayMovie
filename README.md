@@ -19,5 +19,5 @@ RESTful service that provides day movie
 1. Run container
 
     ```console
-    docker run --name daydaymovie -d -p 8080:8080 --env-file=./cmd/movie/.env -v "$(pwd)"/data:/data patricelee/daydaymovie
+    docker run --rm --name daydaymovie --network host -d -p 8080:8080 --env-file=./cmd/movie/.env -v "$(pwd)"/data:/data -v "$(pwd)"/assets:/assets patricelee/daydaymovie
     ```

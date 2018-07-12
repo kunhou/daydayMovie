@@ -8,5 +8,6 @@ RUN dep ensure -vendor-only
 RUN go build -o /bin/movie ./cmd/movie
 
 FROM alpine:latest
+COPY --from=builder /usr/local/go/lib/time/zoneinfo.zip /usr/local/go/lib/time/zoneinfo.zip
 COPY --from=builder /bin/movie ./
 ENTRYPOINT [ "./movie" ]
