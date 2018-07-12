@@ -4,10 +4,10 @@ go:
   - "1.10.x"
 
 before_install:                                                                 
-  - docker build -t patricelee/daydaymovie -f ./deploy/Dockerfile .
+  - docker build -t patricelee/daydaymovie:last -f ./deploy/Dockerfile .
 
 install: true
 
 script:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-  - docker push patricelee/daydaymovie
+  - docker push patricelee/daydaymovie:last
