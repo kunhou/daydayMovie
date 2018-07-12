@@ -12,6 +12,7 @@ func Test_pgsqlRepository_Store(t *testing.T) {
 	type args struct {
 		m *models.Movie
 	}
+	timeNow := time.Now()
 	tests := []struct {
 		name    string
 		p       pgsqlRepository
@@ -37,7 +38,7 @@ func Test_pgsqlRepository_Store(t *testing.T) {
 					BackdropPath:     "aaa",
 					Adult:            true,
 					Overview:         "aaa",
-					ReleaseDate:      time.Now(),
+					ReleaseDate:      &timeNow,
 					CreatedAt:        time.Now(),
 					UpdatedAt:        time.Now(),
 				},
@@ -62,8 +63,9 @@ func Test_pgsqlRepository_Store(t *testing.T) {
 
 func Test_pgsqlRepository_BatchStore(t *testing.T) {
 	type args struct {
-		movies []models.Movie
+		movies []*models.Movie
 	}
+	timeNow := time.Now()
 	tests := []struct {
 		name    string
 		p       pgsqlRepository
@@ -74,8 +76,8 @@ func Test_pgsqlRepository_BatchStore(t *testing.T) {
 			"ok",
 			pgsqlRepository{db.DB},
 			args{
-				[]models.Movie{
-					models.Movie{
+				[]*models.Movie{
+					&models.Movie{
 						ProviderID:       11,
 						Provider:         "tmdb",
 						Title:            "11",
@@ -89,11 +91,11 @@ func Test_pgsqlRepository_BatchStore(t *testing.T) {
 						BackdropPath:     "aaa",
 						Adult:            true,
 						Overview:         "aaa",
-						ReleaseDate:      time.Now(),
+						ReleaseDate:      &timeNow,
 						CreatedAt:        time.Now(),
 						UpdatedAt:        time.Now(),
 					},
-					models.Movie{
+					&models.Movie{
 						ProviderID:       12,
 						Provider:         "tmdb",
 						Title:            "12",
@@ -107,11 +109,11 @@ func Test_pgsqlRepository_BatchStore(t *testing.T) {
 						BackdropPath:     "aaa",
 						Adult:            true,
 						Overview:         "aaa",
-						ReleaseDate:      time.Now(),
+						ReleaseDate:      &timeNow,
 						CreatedAt:        time.Now(),
 						UpdatedAt:        time.Now(),
 					},
-					models.Movie{
+					&models.Movie{
 						ProviderID:       13,
 						Provider:         "tmdb",
 						Title:            "13",
@@ -125,11 +127,11 @@ func Test_pgsqlRepository_BatchStore(t *testing.T) {
 						BackdropPath:     "aaa",
 						Adult:            true,
 						Overview:         "aaa",
-						ReleaseDate:      time.Now(),
+						ReleaseDate:      &timeNow,
 						CreatedAt:        time.Now(),
 						UpdatedAt:        time.Now(),
 					},
-					models.Movie{
+					&models.Movie{
 						ProviderID:       14,
 						Provider:         "tmdb",
 						Title:            "14",
@@ -143,7 +145,7 @@ func Test_pgsqlRepository_BatchStore(t *testing.T) {
 						BackdropPath:     "aaa",
 						Adult:            true,
 						Overview:         "aaa",
-						ReleaseDate:      time.Now(),
+						ReleaseDate:      &timeNow,
 						CreatedAt:        time.Now(),
 						UpdatedAt:        time.Now(),
 					},
