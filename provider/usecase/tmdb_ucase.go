@@ -14,6 +14,8 @@ type tmdbUsecase struct {
 	movieRepo    movie.MovieRepository
 }
 
+var movieWriteChan chan *models.Movie
+
 func NewTmdbUsecase(repo provider.ProviderRepository, movieRepo movie.MovieRepository) provider.ProviderUsecase {
 	return &tmdbUsecase{repo, movieRepo}
 }
@@ -39,7 +41,10 @@ func (tu *tmdbUsecase) StartCrawler(ch chan *models.Movie) {
 }
 
 func (tu *tmdbUsecase) CreateBatchStoreTask() chan *models.Movie {
-	ch := make(chan *models.Movie, 100000)
+	if movieWriteChan != nil {
+		return movieWriteChan
+	}
+	movieWriteChan = make(chan *models.Movie, 100000)
 	movieBuff := []*models.Movie{}
 	go func() {
 		t := time.NewTicker(1 * time.Minute)
@@ -53,7 +58,7 @@ func (tu *tmdbUsecase) CreateBatchStoreTask() chan *models.Movie {
 					log.WithError(err).Error("Movie Task store fail")
 				}
 				movieBuff = []*models.Movie{}
-			case movie := <-ch:
+			case movie := <-movieWriteChan:
 				movieBuff = append(movieBuff, movie)
 				if len(movieBuff) > 0 {
 					if err := tu.movieRepo.BatchStore(movieBuff); err != nil {
@@ -65,5 +70,5 @@ func (tu *tmdbUsecase) CreateBatchStoreTask() chan *models.Movie {
 		}
 	}()
 
-	return ch
+	return movieWriteChan
 }

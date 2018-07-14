@@ -47,6 +47,6 @@ func main() {
 		})
 		<-s.Start()
 	}()
-	router.Setting().Run()
+	router.Setting(pu).Run()
 	log.Info("Service Stop")
 }
