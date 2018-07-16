@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"sync"
 	"time"
 
 	"github.com/kunhou/TMDB/log"
@@ -15,60 +16,62 @@ type tmdbUsecase struct {
 }
 
 var movieWriteChan chan *models.Movie
+var movieWriteSyncOnce sync.Once
 
 func NewTmdbUsecase(repo provider.ProviderRepository, movieRepo movie.MovieRepository) provider.ProviderUsecase {
 	return &tmdbUsecase{repo, movieRepo}
 }
 
 func (tu *tmdbUsecase) StartCrawler(ch chan *models.Movie) {
-	total, err := tu.providerRepo.GetMovieTotalPages()
+	lastestID, err := tu.providerRepo.GetMovieLastID()
 	if err != nil {
-		log.WithError(err).Error("Get discover Fail")
+		log.WithError(err).Error("Get LastID Fail")
 	}
-	for page := 1; page <= total; page++ {
+	for id := 1; id <= lastestID; id++ {
 		time.Sleep(400 * time.Millisecond)
 		go func(p int) {
-			movies, err := tu.providerRepo.GetMovieWithPage(p)
+			m, err := tu.providerRepo.GetMovieDetail(p)
 			if err != nil {
-				log.WithError(err).Error("Get discover Fail")
+				if _, ok := err.(provider.APINotFoundError); !ok {
+					log.WithError(err).Error("Get discover Fail")
+					return
+				}
+				return
 			}
-			for _, m := range movies {
-				ch <- m
-			}
-		}(page)
+			ch <- m
+		}(id)
 	}
 	return
 }
 
 func (tu *tmdbUsecase) CreateBatchStoreTask() chan *models.Movie {
-	if movieWriteChan != nil {
-		return movieWriteChan
-	}
-	movieWriteChan = make(chan *models.Movie, 100000)
-	movieBuff := []*models.Movie{}
-	go func() {
-		t := time.NewTicker(1 * time.Minute)
-		for {
-			select {
-			case <-t.C:
-				if len(movieBuff) == 0 {
-					continue
-				}
-				if err := tu.movieRepo.BatchStore(movieBuff); err != nil {
-					log.WithError(err).Error("Movie Task store fail")
-				}
-				movieBuff = []*models.Movie{}
-			case movie := <-movieWriteChan:
-				movieBuff = append(movieBuff, movie)
-				if len(movieBuff) > 0 {
+	movieWriteSyncOnce.Do(func() {
+		movieWriteChan = make(chan *models.Movie, 100000)
+		movieBuff := []*models.Movie{}
+		go func() {
+			t := time.NewTicker(1 * time.Minute)
+			for {
+				select {
+				case <-t.C:
+					if len(movieBuff) == 0 {
+						continue
+					}
 					if err := tu.movieRepo.BatchStore(movieBuff); err != nil {
 						log.WithError(err).Error("Movie Task store fail")
 					}
 					movieBuff = []*models.Movie{}
+				case movie := <-movieWriteChan:
+					movieBuff = append(movieBuff, movie)
+					if len(movieBuff) > 100 {
+						if err := tu.movieRepo.BatchStore(movieBuff); err != nil {
+							log.WithError(err).Error("Movie Task store fail")
+						}
+						movieBuff = []*models.Movie{}
+					}
 				}
 			}
-		}
-	}()
+		}()
+	})
 
 	return movieWriteChan
 }

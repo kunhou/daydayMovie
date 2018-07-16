@@ -2,6 +2,7 @@ package repository
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -17,9 +18,11 @@ import (
 )
 
 var (
-	cfg           = config.GetConfig()
-	apiURL        = "https://api.themoviedb.org/3/"
-	DISCOVER_PATH = "/discover/movie"
+	cfg              = config.GetConfig()
+	apiURL           = "https://api.themoviedb.org/3/"
+	DISCOVER_PATH    = "/discover/movie"
+	LATEST_MOVIE_ID  = "/movie/latest"
+	GET_MOVIE_DETAIL = "/movie/%d"
 )
 
 type tmdbRepository struct {
@@ -43,6 +46,77 @@ func (tmdb *tmdbRepository) GetMovieTotalPages() (int, error) {
 		return 0, err
 	}
 	return data.TotalPages, nil
+}
+
+func (tmdb *tmdbRepository) GetMovieLastID() (int, error) {
+	type responseBody struct {
+		ID int `json:"id"`
+	}
+	var data responseBody
+	if err := tmdb.request(LATEST_MOVIE_ID, nil, &data); err != nil {
+		return 0, err
+	}
+	return data.ID, nil
+}
+
+func (tmdb *tmdbRepository) GetMovieDetail(id int) (*models.Movie, error) {
+	type responseBody struct {
+		ID               uint    `json:"id"`
+		VoteCount        int     `json:"vote_count"`
+		Video            bool    `json:"video"`
+		VoteAverage      float32 `json:"vote_average"`
+		Title            string  `json:"title"`
+		Popularity       float32 `json:"popularity"`
+		PosterPath       string  `json:"poster_path"`
+		OriginalLanguage string  `json:"original_language"`
+		OriginalTitle    string  `json:"original_title"`
+		GenreIds         []struct {
+			ID   int64  `json:"id"`
+			Name string `json:"name`
+		} `json:"genres"`
+		BackdropPath string `json:"backdrop_path"`
+		Adult        bool   `json:"adult"`
+		Overview     string `json:"overview"`
+		ReleaseDate  string `json:"release_date"`
+	}
+
+	var data responseBody
+	urlPath := fmt.Sprintf(GET_MOVIE_DETAIL, id)
+	if err := tmdb.request(urlPath, nil, &data); err != nil {
+		return nil, err
+	}
+
+	var rTime *time.Time
+	rTime = nil
+	if len(data.ReleaseDate) > 0 {
+		t, err := time.Parse("2006-01-02", data.ReleaseDate)
+		if err != nil {
+			log.WithError(err).Error("Parse time error : " + data.ReleaseDate)
+		} else {
+			rTime = &t
+		}
+	}
+	genreIDs := []int64{}
+	for _, g := range data.GenreIds {
+		genreIDs = append(genreIDs, g.ID)
+	}
+
+	return &models.Movie{
+		Provider:         "tmdb",
+		ProviderID:       data.ID,
+		Title:            data.Title,
+		OriginalTitle:    data.OriginalTitle,
+		Popularity:       data.Popularity,
+		VoteAverage:      data.VoteAverage,
+		VoteCount:        data.VoteCount,
+		PosterPath:       data.PosterPath,
+		OriginalLanguage: data.OriginalLanguage,
+		GenreIds:         genreIDs,
+		BackdropPath:     data.BackdropPath,
+		Adult:            data.Adult,
+		Overview:         data.Overview,
+		ReleaseDate:      rTime,
+	}, nil
 }
 
 func (tmdb *tmdbRepository) GetMovieWithPage(page int) ([]*models.Movie, error) {
@@ -128,8 +202,12 @@ func (tmdb *tmdbRepository) request(urlPath string, options map[string]string, v
 	if err != nil {
 		return errors.Wrap(err, "ReadAll error")
 	}
-
 	if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode == http.StatusNotFound {
+			return provider.APINotFoundError{
+				Path: urlPath,
+			}
+		}
 		return errors.New("fail: " + string(body))
 	}
 	if err := json.Unmarshal(body, &v); err != nil {
