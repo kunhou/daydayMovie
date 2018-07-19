@@ -28,7 +28,7 @@ func (tu *tmdbUsecase) StartCrawler(ch chan *models.Movie) {
 		log.WithError(err).Error("Get LastID Fail")
 	}
 	for id := 1; id <= lastestID; id++ {
-		time.Sleep(400 * time.Millisecond)
+		time.Sleep(700 * time.Millisecond)
 		go func(p int) {
 			m, err := tu.providerRepo.GetMovieDetail(p)
 			if err != nil {
