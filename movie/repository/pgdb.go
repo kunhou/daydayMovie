@@ -14,7 +14,7 @@ type pgsqlRepository struct {
 	Conn *gorm.DB
 }
 
-func NewPGsqlArticleRepository(Conn *gorm.DB) movie.MovieRepository {
+func NewPGsqlMovieRepository(Conn *gorm.DB) movie.MovieRepository {
 	return &pgsqlRepository{Conn}
 }
 

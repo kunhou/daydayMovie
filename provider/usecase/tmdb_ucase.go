@@ -7,22 +7,21 @@ import (
 	"github.com/kunhou/TMDB/log"
 	"github.com/kunhou/TMDB/models"
 	"github.com/kunhou/TMDB/movie"
+	"github.com/kunhou/TMDB/person"
 	"github.com/kunhou/TMDB/provider"
 )
 
 type tmdbUsecase struct {
 	providerRepo provider.ProviderRepository
 	movieRepo    movie.MovieRepository
+	personRepo   person.PersonRepository
 }
 
-var movieWriteChan chan *models.Movie
-var movieWriteSyncOnce sync.Once
-
-func NewTmdbUsecase(repo provider.ProviderRepository, movieRepo movie.MovieRepository) provider.ProviderUsecase {
-	return &tmdbUsecase{repo, movieRepo}
+func NewTmdbUsecase(repo provider.ProviderRepository, movieRepo movie.MovieRepository, personRepo person.PersonRepository) provider.ProviderUsecase {
+	return &tmdbUsecase{repo, movieRepo, personRepo}
 }
 
-func (tu *tmdbUsecase) StartCrawler(ch chan *models.Movie) {
+func (tu *tmdbUsecase) StartCrawlerMovie(ch chan *models.Movie) {
 	lastestID, err := tu.providerRepo.GetMovieLastID()
 	if err != nil {
 		log.WithError(err).Error("Get LastID Fail")
@@ -44,7 +43,32 @@ func (tu *tmdbUsecase) StartCrawler(ch chan *models.Movie) {
 	return
 }
 
-func (tu *tmdbUsecase) CreateBatchStoreTask() chan *models.Movie {
+func (tu *tmdbUsecase) StartCrawlerPerson(ch chan *models.Person) {
+	lastestID, err := tu.providerRepo.GetPersonLastID()
+	if err != nil {
+		log.WithError(err).Error("Get LastID Fail")
+	}
+	for id := 1; id <= lastestID; id++ {
+		time.Sleep(700 * time.Millisecond)
+		go func(p int) {
+			person, err := tu.providerRepo.GetPersonDetail(p)
+			if err != nil {
+				if _, ok := err.(provider.APINotFoundError); !ok {
+					log.WithError(err).Error("Get discover Fail")
+					return
+				}
+				return
+			}
+			ch <- person
+		}(id)
+	}
+	return
+}
+
+var movieWriteChan chan *models.Movie
+var movieWriteSyncOnce sync.Once
+
+func (tu *tmdbUsecase) CreateBatchStoreMovieTask() chan *models.Movie {
 	movieWriteSyncOnce.Do(func() {
 		movieWriteChan = make(chan *models.Movie, 100000)
 		movieBuff := []*models.Movie{}
@@ -74,4 +98,39 @@ func (tu *tmdbUsecase) CreateBatchStoreTask() chan *models.Movie {
 	})
 
 	return movieWriteChan
+}
+
+var personWriteChan chan *models.Person
+var personWriteSyncOnce sync.Once
+
+func (tu *tmdbUsecase) CreateBatchStorePersonTask() chan *models.Person {
+	personWriteSyncOnce.Do(func() {
+		personWriteChan = make(chan *models.Person, 100000)
+		personBuff := []*models.Person{}
+		go func() {
+			t := time.NewTicker(1 * time.Minute)
+			for {
+				select {
+				case <-t.C:
+					if len(personBuff) == 0 {
+						continue
+					}
+					if err := tu.personRepo.BatchStore(personBuff); err != nil {
+						log.WithError(err).Error("person Task store fail")
+					}
+					personBuff = []*models.Person{}
+				case person := <-personWriteChan:
+					personBuff = append(personBuff, person)
+					if len(personBuff) > 1 {
+						if err := tu.personRepo.BatchStore(personBuff); err != nil {
+							log.WithError(err).Error("person Task store fail")
+						}
+						personBuff = []*models.Person{}
+					}
+				}
+			}
+		}()
+	})
+
+	return personWriteChan
 }

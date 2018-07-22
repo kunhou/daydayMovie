@@ -35,7 +35,10 @@ func Setting(pu provider.ProviderUsecase) *gin.Engine {
 	{
 		v1.Any("authentication/:provider/start", providerLogin)
 		v1.Any("authentication/:provider/redirect", providerRedirect)
-		v1.POST("manual/crawler", pHttpHandler.ManualCrawlerTask)
+		manual := v1.Group("manual")
+		{
+			manual.POST("crawler/:type", pHttpHandler.ManualCrawlerTask)
+		}
 	}
 	return router
 }

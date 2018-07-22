@@ -12,6 +12,7 @@ import (
 
 	"github.com/kunhou/TMDB/db"
 	movieRepo "github.com/kunhou/TMDB/movie/repository"
+	personRepo "github.com/kunhou/TMDB/person/repository"
 	providerRepo "github.com/kunhou/TMDB/provider/repository"
 	providerUcase "github.com/kunhou/TMDB/provider/usecase"
 )
@@ -32,18 +33,19 @@ func main() {
 	db.Migrate(*rollback)
 
 	cfg := config.GetConfig()
-	mr := movieRepo.NewPGsqlArticleRepository(db.DB)
+	mr := movieRepo.NewPGsqlMovieRepository(db.DB)
+	personr := personRepo.NewPGsqlPersonRepository(db.DB)
 	pr := providerRepo.NewTMDBRepository(cfg.TMDBToken)
-	pu := providerUcase.NewTmdbUsecase(pr, mr)
+	pu := providerUcase.NewTmdbUsecase(pr, mr, personr)
 
-	ch := pu.CreateBatchStoreTask()
+	ch := pu.CreateBatchStoreMovieTask()
 	log.Info("Service Start")
 	gocron.ChangeLoc(_localZone)
 	go func() {
 		s := gocron.NewScheduler()
 		s.Every(1).Day().At("04:00").Do(func() {
 			log.Info("Start crawler")
-			go pu.StartCrawler(ch)
+			go pu.StartCrawlerMovie(ch)
 		})
 		<-s.Start()
 	}()

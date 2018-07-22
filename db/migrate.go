@@ -35,6 +35,7 @@ type Person struct {
 	ProviderID   uint           `json:"-" gorm:"column:provider_id;not null;unique_index:idx_provider_person"`
 	Provider     string         `json:"provider" gorm:"type:varchar(127);not null;unique_index:idx_provider_person"`
 	Birthday     time.Time      `json:"birthday" gorm:"type:timestamp without time zone;"`
+	Name         string         `json:"name" gorm:"type:varchar(255);not null;index"`
 	Deathday     time.Time      `json:"deathday" gorm:"type:timestamp without time zone;"`
 	Gender       uint8          `json:"gender" gorm:"not null"`
 	Biography    string         `json:"biography" gorm:"type:text;not null"`
@@ -44,6 +45,7 @@ type Person struct {
 	ImdbID       string         `json:"imdbID" gorm:"type:varchar(127);not null"`
 	Homepage     string         `json:"homepage" gorm:"type:varchar(255);not null"`
 	AlsoKnownAs  pq.StringArray `json:"alsoKnownAs,omitempty" gorm:"type:varchar(127)[];not null"` // {"HTTP", "HTTPS"}
+	ProfilePath  string         `json:"profilePath" gorm:"type:varchar(255);not null"`
 	Movies       []Movie        `gorm:"many2many:movie_people;association_foreignkey:id;foreignkey:id"`
 	CreatedAt    time.Time      `json:"createdAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 	UpdatedAt    time.Time      `json:"updatedAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
@@ -56,7 +58,18 @@ func (Person) TableName() string {
 
 func Migrate(rollback int) {
 	DB.LogMode(true)
-	m := gormigrate.New(DB, gormigrate.DefaultOptions, []*gormigrate.Migration{})
+	m := gormigrate.New(DB, gormigrate.DefaultOptions, []*gormigrate.Migration{
+		{
+			ID: "201807221000",
+			Migrate: func(tx *gorm.DB) error {
+				tx.Exec("DROP TABLE if exists people cascade;")
+				return tx.AutoMigrate(&Person{}).Error
+			},
+			Rollback: func(tx *gorm.DB) error {
+				return nil
+			},
+		},
+	})
 	m.InitSchema(func(tx *gorm.DB) error {
 		if err := tx.AutoMigrate(&Movie{}, &Person{}).Error; err != nil {
 			return err

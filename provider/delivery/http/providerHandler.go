@@ -1,7 +1,10 @@
 package http
 
 import (
+	"strings"
+
 	"github.com/gin-gonic/gin"
+	"github.com/kunhou/TMDB/log"
 	"github.com/kunhou/TMDB/provider"
 )
 
@@ -10,8 +13,17 @@ type HttpProviderHandler struct {
 }
 
 func (ph *HttpProviderHandler) ManualCrawlerTask(c *gin.Context) {
-	ch := ph.PUsecase.CreateBatchStoreTask()
-	go ph.PUsecase.StartCrawler(ch)
+	crawlerType := c.Param("type")
+	if strings.EqualFold(crawlerType, "movie") {
+		log.Info("Manual crawler movie")
+		ch := ph.PUsecase.CreateBatchStoreMovieTask()
+		go ph.PUsecase.StartCrawlerMovie(ch)
+	} else if strings.EqualFold(crawlerType, "person") {
+		log.Info("Manual crawler person")
+		ch := ph.PUsecase.CreateBatchStorePersonTask()
+		go ph.PUsecase.StartCrawlerPerson(ch)
+	}
+
 	return
 }
 

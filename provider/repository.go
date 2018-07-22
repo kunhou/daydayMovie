@@ -11,6 +11,8 @@ type ProviderRepository interface {
 	GetMovieTotalPages() (int, error)
 	GetMovieLastID() (int, error)
 	GetMovieDetail(id int) (*models.Movie, error)
+	GetPersonLastID() (int, error)
+	GetPersonDetail(id int) (*models.Person, error)
 }
 type APINotFoundError struct {
 	Path string

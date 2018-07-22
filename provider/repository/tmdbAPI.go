@@ -18,11 +18,13 @@ import (
 )
 
 var (
-	cfg              = config.GetConfig()
-	apiURL           = "https://api.themoviedb.org/3/"
-	DISCOVER_PATH    = "/discover/movie"
-	LATEST_MOVIE_ID  = "/movie/latest"
-	GET_MOVIE_DETAIL = "/movie/%d"
+	cfg               = config.GetConfig()
+	apiURL            = "https://api.themoviedb.org/3/"
+	DISCOVER_PATH     = "/discover/movie"
+	LATEST_MOVIE_ID   = "/movie/latest"
+	GET_MOVIE_DETAIL  = "/movie/%d"
+	LATEST_PERSON_ID  = "/person/latest"
+	GET_PERSON_DETAIL = "/person/%d"
 )
 
 type tmdbRepository struct {
@@ -180,6 +182,79 @@ func (tmdb *tmdbRepository) GetMovieWithPage(page int) ([]*models.Movie, error) 
 		})
 	}
 	return movies, nil
+}
+
+func (tmdb *tmdbRepository) GetPersonLastID() (int, error) {
+	type responseBody struct {
+		ID int `json:"id"`
+	}
+	var data responseBody
+	if err := tmdb.request(LATEST_PERSON_ID, nil, &data); err != nil {
+		return 0, err
+	}
+	return data.ID, nil
+}
+
+func (tmdb *tmdbRepository) GetPersonDetail(id int) (*models.Person, error) {
+	type responseBody struct {
+		ID                 uint     `json:"id"`
+		Birthday           string   `json:"birthday"`
+		KnownForDepartment string   `json:"known_for_department"`
+		Deathday           string   `json:"deathday"`
+		Name               string   `json:"name"`
+		AlsoKnownAs        []string `json:"also_known_as"`
+		Gender             uint8    `json:"gender"`
+		Biography          string   `json:"biography"`
+		Popularity         float32  `json:"popularity"`
+		PlaceOfBirth       string   `json:"place_of_birth"`
+		ProfilePath        string   `json:"profile_path"`
+		Adult              bool     `json:"adult"`
+		ImdbID             string   `json:"imdb_id"`
+		Homepage           string   `json:"homepage"`
+	}
+
+	var data responseBody
+	urlPath := fmt.Sprintf(GET_PERSON_DETAIL, id)
+	if err := tmdb.request(urlPath, nil, &data); err != nil {
+		return nil, err
+	}
+
+	var birthday, deathday *time.Time
+	birthday = nil
+	if len(data.Birthday) > 0 {
+		t, err := time.Parse("2006-01-02", data.Birthday)
+		if err != nil {
+			log.WithError(err).Error("Parse time error : " + data.Birthday)
+		} else {
+			birthday = &t
+		}
+	}
+	deathday = nil
+	if len(data.Deathday) > 0 {
+		t, err := time.Parse("2006-01-02", data.Deathday)
+		if err != nil {
+			log.WithError(err).Error("Parse time error : " + data.Deathday)
+		} else {
+			deathday = &t
+		}
+	}
+
+	return &models.Person{
+		Provider:     "tmdb",
+		ProviderID:   data.ID,
+		Name:         data.Name,
+		Birthday:     birthday,
+		Deathday:     deathday,
+		Gender:       data.Gender,
+		Biography:    data.Biography,
+		Popularity:   data.Popularity,
+		PlaceOfBirth: data.PlaceOfBirth,
+		Adult:        data.Adult,
+		ImdbID:       data.ImdbID,
+		Homepage:     data.Homepage,
+		AlsoKnownAs:  data.AlsoKnownAs,
+		ProfilePath:  data.ProfilePath,
+	}, nil
 }
 
 func (tmdb *tmdbRepository) request(urlPath string, options map[string]string, v interface{}) error {
