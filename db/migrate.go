@@ -69,6 +69,16 @@ func Migrate(rollback int) {
 				return nil
 			},
 		},
+		{
+			ID: "201807221100",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.Table("movie_people").
+					AddForeignKey("person_id", "people(id)", "CASCADE", "NO ACTION").Error
+			},
+			Rollback: func(tx *gorm.DB) error {
+				return nil
+			},
+		},
 	})
 	m.InitSchema(func(tx *gorm.DB) error {
 		if err := tx.AutoMigrate(&Movie{}, &Person{}).Error; err != nil {

@@ -12,6 +12,7 @@ import (
 
 	"github.com/kunhou/TMDB/db"
 	movieRepo "github.com/kunhou/TMDB/movie/repository"
+	movieUcase "github.com/kunhou/TMDB/movie/usecase"
 	personRepo "github.com/kunhou/TMDB/person/repository"
 	providerRepo "github.com/kunhou/TMDB/provider/repository"
 	providerUcase "github.com/kunhou/TMDB/provider/usecase"
@@ -37,6 +38,7 @@ func main() {
 	personr := personRepo.NewPGsqlPersonRepository(db.DB)
 	pr := providerRepo.NewTMDBRepository(cfg.TMDBToken)
 	pu := providerUcase.NewTmdbUsecase(pr, mr, personr)
+	mu := movieUcase.NewMovieUsecase(mr)
 
 	ch := pu.CreateBatchStoreMovieTask()
 	log.Info("Service Start")
@@ -49,6 +51,6 @@ func main() {
 		})
 		<-s.Start()
 	}()
-	router.Setting(pu).Run()
+	router.Setting(pu, mu).Run()
 	log.Info("Service Stop")
 }

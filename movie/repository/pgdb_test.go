@@ -1,9 +1,11 @@
 package repository
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
+	"github.com/jinzhu/gorm"
 	"github.com/kunhou/TMDB/db"
 	"github.com/kunhou/TMDB/models"
 )
@@ -158,6 +160,89 @@ func Test_pgsqlRepository_BatchStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.p.BatchStore(tt.args.movies); (err != nil) != tt.wantErr {
 				t.Errorf("pgsqlRepository.BatchStore() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_pgsqlRepository_List(t *testing.T) {
+	type args struct {
+		page  int
+		limit int
+		query map[string]string
+	}
+	tests := []struct {
+		name    string
+		p       pgsqlRepository
+		args    args
+		want    []*models.MovieIntro
+		want2   *models.Page
+		wantErr bool
+	}{
+		{
+			"ok",
+			pgsqlRepository{db.DB},
+			args{2, 10, map[string]string{"popularity": "desc"}},
+			nil,
+			nil,
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got2, err := tt.p.List(tt.args.page, tt.args.limit, tt.args.query)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("pgsqlRepository.List() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("pgsqlRepository.List() = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(got2, tt.want2) {
+				t.Errorf("pgsqlRepository.List() = %v, want2 %v", got2, tt.want2)
+			}
+		})
+	}
+}
+
+func Test_pgsqlRepository_MovieDetail(t *testing.T) {
+	type fields struct {
+		Conn *gorm.DB
+	}
+	type args struct {
+		id uint
+	}
+	tests := []struct {
+		name    string
+		p       pgsqlRepository
+		args    args
+		want    *models.Movie
+		wantErr bool
+	}{
+		{
+			"ok",
+			pgsqlRepository{db.DB},
+			args{1},
+			nil,
+			false,
+		},
+		{
+			"ok",
+			pgsqlRepository{db.DB},
+			args{10},
+			nil,
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.p.MovieDetail(tt.args.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("pgsqlRepository.MovieDetail() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("pgsqlRepository.MovieDetail() = %v, want %v", got, tt.want)
 			}
 		})
 	}

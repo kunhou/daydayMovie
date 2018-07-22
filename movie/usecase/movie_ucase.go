@@ -19,6 +19,15 @@ func (m *MovieUsecase) Store(movie *models.Movie) (uint, error) {
 	return m.movieRepos.Store(movie)
 
 }
+
 func (m *MovieUsecase) BatchStore(movies []*models.Movie) error {
 	return m.movieRepos.BatchStore(movies)
+}
+
+func (m *MovieUsecase) MovieList(page, limit int, order map[string]string) ([]*models.MovieIntro, *models.Page, error) {
+	return m.movieRepos.MovieList(page, limit, order)
+}
+
+func (m *MovieUsecase) MovieDetail(id uint) (*models.Movie, error) {
+	return m.movieRepos.MovieDetail(id)
 }

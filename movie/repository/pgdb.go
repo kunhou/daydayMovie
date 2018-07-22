@@ -8,6 +8,7 @@ import (
 	"github.com/kunhou/TMDB/log"
 	"github.com/kunhou/TMDB/models"
 	"github.com/kunhou/TMDB/movie"
+	"github.com/kunhou/TMDB/utils"
 )
 
 type pgsqlRepository struct {
@@ -68,4 +69,44 @@ func (p *pgsqlRepository) BatchStore(movies []*models.Movie) error {
 	}
 
 	return nil
+}
+
+func (p *pgsqlRepository) MovieList(page, limit int, order map[string]string) ([]*models.MovieIntro, *models.Page, error) {
+	if limit == 0 {
+		limit = 20
+	}
+	if page == 0 {
+		page = 1
+	}
+	db := p.Conn
+	if o, ok := order["popularity"]; ok && utils.ValidOrderType(o) {
+		db = db.Order("popularity " + o)
+	}
+	offset := (page - 1) * limit
+	movies := []*models.MovieIntro{}
+	var count uint
+	if err := db.Table("movies").Count(&count).Error; err != nil {
+		return movies, nil, err
+	}
+	if err := db.Offset(offset).Limit(limit).Find(&movies).Error; err != nil {
+		return movies, nil, err
+	}
+
+	totalPages := count/uint(limit) + 1
+	pages := models.Page{
+		TotalPages:   uint(totalPages),
+		TotalResults: count,
+		Page:         uint(page),
+	}
+	return movies, &pages, nil
+}
+
+func (p *pgsqlRepository) MovieDetail(id uint) (*models.Movie, error) {
+	m := models.Movie{
+		ID: id,
+	}
+	if err := p.Conn.Find(&m).Error; err != nil {
+		return nil, err
+	}
+	return &m, nil
 }

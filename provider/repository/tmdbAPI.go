@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kunhou/TMDB/config"
 	"github.com/kunhou/TMDB/log"
 	"github.com/kunhou/TMDB/models"
 	"github.com/kunhou/TMDB/provider"
@@ -18,7 +17,6 @@ import (
 )
 
 var (
-	cfg               = config.GetConfig()
 	apiURL            = "https://api.themoviedb.org/3/"
 	DISCOVER_PATH     = "/discover/movie"
 	LATEST_MOVIE_ID   = "/movie/latest"

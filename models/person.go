@@ -26,3 +26,7 @@ type Person struct {
 	CreatedAt    time.Time      `json:"createdAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 	UpdatedAt    time.Time      `json:"updatedAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 }
+
+func (Person) TableName() string {
+	return "people"
+}
