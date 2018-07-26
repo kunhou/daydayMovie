@@ -11,6 +11,8 @@ import (
 	"github.com/kunhou/TMDB/provider"
 )
 
+const CrawlerInterval = 700 * time.Millisecond
+
 type tmdbUsecase struct {
 	providerRepo provider.ProviderRepository
 	movieRepo    movie.MovieRepository
@@ -27,18 +29,16 @@ func (tu *tmdbUsecase) StartCrawlerMovie(ch chan *models.Movie) {
 		log.WithError(err).Error("Get LastID Fail")
 	}
 	for id := 1; id <= lastestID; id++ {
-		time.Sleep(700 * time.Millisecond)
-		go func(p int) {
-			m, err := tu.providerRepo.GetMovieDetail(p)
-			if err != nil {
-				if _, ok := err.(provider.APINotFoundError); !ok {
-					log.WithError(err).Error("Get discover Fail")
-					return
-				}
+		time.Sleep(CrawlerInterval)
+		m, err := tu.providerRepo.GetMovieDetail(id)
+		if err != nil {
+			if _, ok := err.(provider.APINotFoundError); !ok {
+				log.WithError(err).Error("Get discover Fail")
 				return
 			}
-			ch <- m
-		}(id)
+			return
+		}
+		ch <- m
 	}
 	return
 }
@@ -49,18 +49,16 @@ func (tu *tmdbUsecase) StartCrawlerPerson(ch chan *models.Person) {
 		log.WithError(err).Error("Get LastID Fail")
 	}
 	for id := 1; id <= lastestID; id++ {
-		time.Sleep(700 * time.Millisecond)
-		go func(p int) {
-			person, err := tu.providerRepo.GetPersonDetail(p)
-			if err != nil {
-				if _, ok := err.(provider.APINotFoundError); !ok {
-					log.WithError(err).Error("Get discover Fail")
-					return
-				}
+		time.Sleep(CrawlerInterval)
+		person, err := tu.providerRepo.GetPersonDetail(id)
+		if err != nil {
+			if _, ok := err.(provider.APINotFoundError); !ok {
+				log.WithError(err).Error("Get discover Fail")
 				return
 			}
-			ch <- person
-		}(id)
+			return
+		}
+		ch <- person
 	}
 	return
 }

@@ -41,13 +41,17 @@ func main() {
 	mu := movieUcase.NewMovieUsecase(mr)
 
 	ch := pu.CreateBatchStoreMovieTask()
+	pch := pu.CreateBatchStorePersonTask()
 	log.Info("Service Start")
 	gocron.ChangeLoc(_localZone)
 	go func() {
 		s := gocron.NewScheduler()
 		s.Every(1).Day().At("04:00").Do(func() {
 			log.Info("Start crawler")
-			go pu.StartCrawlerMovie(ch)
+			go func() {
+				pu.StartCrawlerMovie(ch)
+				pu.StartCrawlerPerson(pch)
+			}()
 		})
 		<-s.Start()
 	}()
