@@ -155,3 +155,87 @@ func Test_tmdbRepository_GetPersonDetail(t *testing.T) {
 		})
 	}
 }
+
+func Test_tmdbRepository_GetTVDetail(t *testing.T) {
+	type fields struct {
+		token string
+	}
+	type args struct {
+		id int
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *models.TV
+		wantErr bool
+	}{
+		{
+			"ok",
+			fields{cfg.TMDBToken},
+			args{6894},
+			&models.TV{},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmdb := &tmdbRepository{
+				token: tt.fields.token,
+			}
+			got, err := tmdb.GetTVDetail(tt.args.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("tmdbRepository.GetTVDetail() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("tmdbRepository.GetTVDetail() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_tmdbRepository_GetTVSeasonVote(t *testing.T) {
+	type fields struct {
+		token string
+	}
+	type args struct {
+		tvID     int
+		seasonID int
+	}
+	tests := []struct {
+		name          string
+		fields        fields
+		args          args
+		wantVoteAvg   float64
+		wantVoteCount int
+		wantErr       bool
+	}{
+		{
+			"ok",
+			fields{cfg.TMDBToken},
+			args{1418, 1},
+			0,
+			0,
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmdb := &tmdbRepository{
+				token: tt.fields.token,
+			}
+			gotVoteAvg, gotVoteCount, err := tmdb.GetTVSeasonVote(tt.args.tvID, tt.args.seasonID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("tmdbRepository.GetTVSeasonVote() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotVoteAvg != tt.wantVoteAvg {
+				t.Errorf("tmdbRepository.GetTVSeasonVote() gotVoteAvg = %v, want %v", gotVoteAvg, tt.wantVoteAvg)
+			}
+			if gotVoteCount != tt.wantVoteCount {
+				t.Errorf("tmdbRepository.GetTVSeasonVote() gotVoteCount = %v, want %v", gotVoteCount, tt.wantVoteCount)
+			}
+		})
+	}
+}

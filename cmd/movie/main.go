@@ -42,6 +42,8 @@ func main() {
 
 	ch := pu.CreateBatchStoreMovieTask()
 	pch := pu.CreateBatchStorePersonTask()
+	tch := pu.CreateStoreTVTask()
+
 	log.Info("Service Start")
 	gocron.ChangeLoc(_localZone)
 	go func() {
@@ -51,6 +53,7 @@ func main() {
 			go func() {
 				pu.StartCrawlerMovie(ch)
 				pu.StartCrawlerPerson(pch)
+				pu.StartCrawlerTV(tch)
 			}()
 		})
 		<-s.Start()

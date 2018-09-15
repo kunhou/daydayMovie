@@ -34,9 +34,9 @@ func (tu *tmdbUsecase) StartCrawlerMovie(ch chan *models.Movie) {
 		if err != nil {
 			if _, ok := err.(provider.APINotFoundError); !ok {
 				log.WithError(err).Error("Get discover Fail")
-				return
+				continue
 			}
-			return
+			continue
 		}
 		ch <- m
 	}
@@ -54,9 +54,8 @@ func (tu *tmdbUsecase) StartCrawlerPerson(ch chan *models.Person) {
 		if err != nil {
 			if _, ok := err.(provider.APINotFoundError); !ok {
 				log.WithError(err).Error("Get discover Fail")
-				return
 			}
-			return
+			continue
 		}
 		ch <- person
 	}
@@ -131,4 +130,59 @@ func (tu *tmdbUsecase) CreateBatchStorePersonTask() chan *models.Person {
 	})
 
 	return personWriteChan
+}
+
+func (tu *tmdbUsecase) StartCrawlerTV(ch chan *models.TV) {
+	lastestID, err := tu.providerRepo.GetTVLastID()
+	log.Info("tv lastestID: ", lastestID)
+	if err != nil {
+		log.WithError(err).Error("Get LastID Fail")
+	}
+	for id := 1; id <= lastestID; id++ {
+		time.Sleep(CrawlerInterval)
+		log.Info("tv id: ", id)
+		tv, err := tu.providerRepo.GetTVDetail(id)
+		if err != nil {
+			if _, ok := err.(provider.APINotFoundError); !ok {
+				log.WithError(err).Error("Get discover Fail")
+				continue
+			}
+			continue
+		}
+		tAvg, tCount, total := float64(0), 0, 0
+		for _, s := range tv.Seasons {
+			time.Sleep(CrawlerInterval)
+			avg, count, err := tu.providerRepo.GetTVSeasonVote(uint(id), s.SeasonNumber)
+			if err != nil {
+				log.WithError(err).Error("get tv season vote fail")
+				continue
+			}
+			total++
+			tAvg += avg
+			tCount += count
+		}
+		tv.VoteCount = tCount
+		tv.VoteAverage = tAvg / float64(tCount)
+		ch <- tv
+	}
+	return
+}
+
+var tvWriteChan chan *models.TV
+var tvWriteSyncOnce sync.Once
+
+func (tu *tmdbUsecase) CreateStoreTVTask() chan *models.TV {
+	tvWriteSyncOnce.Do(func() {
+		tvWriteChan = make(chan *models.TV, 100000)
+		go func() {
+			for {
+				tv := <-tvWriteChan
+				if _, err := tu.movieRepo.TVStore(tv); err != nil {
+					log.WithError(err).Error("tv Task store fail")
+				}
+			}
+		}()
+	})
+
+	return tvWriteChan
 }

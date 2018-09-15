@@ -7,4 +7,6 @@ type ProviderUsecase interface {
 	CreateBatchStoreMovieTask() chan *models.Movie
 	StartCrawlerPerson(ch chan *models.Person)
 	CreateBatchStorePersonTask() chan *models.Person
+	StartCrawlerTV(ch chan *models.TV)
+	CreateStoreTVTask() chan *models.TV
 }

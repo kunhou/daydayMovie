@@ -190,16 +190,16 @@ func Test_pgsqlRepository_List(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got2, err := tt.p.List(tt.args.page, tt.args.limit, tt.args.query)
+			got, got2, err := tt.p.MovieList(tt.args.page, tt.args.limit, tt.args.query)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("pgsqlRepository.List() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("pgsqlRepository.MovieList() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("pgsqlRepository.List() = %v, want %v", got, tt.want)
+				t.Errorf("pgsqlRepository.MovieList() = %v, want %v", got, tt.want)
 			}
 			if !reflect.DeepEqual(got2, tt.want2) {
-				t.Errorf("pgsqlRepository.List() = %v, want2 %v", got2, tt.want2)
+				t.Errorf("pgsqlRepository.MovieList() = %v, want2 %v", got2, tt.want2)
 			}
 		})
 	}
@@ -243,6 +243,54 @@ func Test_pgsqlRepository_MovieDetail(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("pgsqlRepository.MovieDetail() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_pgsqlRepository_TVStore(t *testing.T) {
+	type fields struct {
+		Conn *gorm.DB
+	}
+	type args struct {
+		t *models.TV
+	}
+	tests := []struct {
+		name    string
+		p       pgsqlRepository
+		args    args
+		want    uint
+		wantErr bool
+	}{
+		{
+			"ok",
+			pgsqlRepository{db.DB},
+			args{
+				&models.TV{
+					Provider:     "tmdb",
+					ProviderID:   1121,
+					BackdropPath: "asdasd",
+					CreatedBy: []models.CreatedBy{
+						models.CreatedBy{123, "asd", "aaaa", 1, "wdds"},
+					},
+					EpisodeRunTime: []int64{54},
+					GenreIds:       []int64{54},
+					OriginCountry:  []string{},
+				},
+			},
+			0,
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.p.TVStore(tt.args.t)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("pgsqlRepository.TVStore() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("pgsqlRepository.TVStore() = %v, want %v", got, tt.want)
 			}
 		})
 	}

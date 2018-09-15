@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"net/url"
 	"path"
@@ -23,6 +24,9 @@ var (
 	GET_MOVIE_DETAIL  = "/movie/%d"
 	LATEST_PERSON_ID  = "/person/latest"
 	GET_PERSON_DETAIL = "/person/%d"
+	LATEST_TV_ID      = "/tv/latest"
+	GET_TV_DETAIL     = "/tv/%d"
+	GET_TV_SEASON     = "/tv/%d/season/%d"
 )
 
 type tmdbRepository struct {
@@ -253,6 +257,231 @@ func (tmdb *tmdbRepository) GetPersonDetail(id int) (*models.Person, error) {
 		AlsoKnownAs:  data.AlsoKnownAs,
 		ProfilePath:  data.ProfilePath,
 	}, nil
+}
+
+func (tmdb *tmdbRepository) GetTVLastID() (int, error) {
+	type responseBody struct {
+		ID int `json:"id"`
+	}
+	var data responseBody
+	if err := tmdb.request(LATEST_TV_ID, nil, &data); err != nil {
+		return 0, err
+	}
+	return data.ID, nil
+}
+
+func (tmdb *tmdbRepository) GetTVDetail(id int) (*models.TV, error) {
+	type responseBody struct {
+		BackdropPath   string             `json:"backdrop_path"`
+		CreatedBy      []models.CreatedBy `json:"created_by"`
+		EpisodeRunTime []int64            `json:"episode_run_time"`
+		FirstAirDate   string             `json:"first_air_date"`
+		Genres         []struct {
+			ID   int64  `json:"id"`
+			Name string `json:"name"`
+		} `json:"genres"`
+		Homepage         string   `json:"homepage"`
+		ID               uint     `json:"id"`
+		InProduction     bool     `json:"in_production"`
+		Languages        []string `json:"languages"`
+		LastAirDate      string   `json:"last_air_date"`
+		LastEpisodeToAir struct {
+			AirDate        string  `json:"air_date"`
+			EpisodeNumber  int     `json:"episode_number"`
+			ID             int     `json:"id"`
+			Name           string  `json:"name"`
+			Overview       string  `json:"overview"`
+			ProductionCode string  `json:"production_code"`
+			SeasonNumber   int     `json:"season_number"`
+			ShowID         int     `json:"show_id"`
+			StillPath      string  `json:"still_path"`
+			VoteAverage    float64 `json:"vote_average"`
+			VoteCount      int     `json:"vote_count"`
+		} `json:"last_episode_to_air"`
+		Name             string `json:"name"`
+		NextEpisodeToAir struct {
+			AirDate        string `json:"air_date"`
+			EpisodeNumber  int    `json:"episode_number"`
+			ID             int    `json:"id"`
+			Name           string `json:"name"`
+			Overview       string `json:"overview"`
+			ProductionCode string `json:"production_code"`
+			SeasonNumber   int    `json:"season_number"`
+			ShowID         int    `json:"show_id"`
+			StillPath      string `json:"still_path"`
+			VoteAverage    int    `json:"vote_average"`
+			VoteCount      int    `json:"vote_count"`
+		} `json:"next_episode_to_air"`
+		Networks []struct {
+			Name          string `json:"name"`
+			ID            int    `json:"id"`
+			LogoPath      string `json:"logo_path"`
+			OriginCountry string `json:"origin_country"`
+		} `json:"networks"`
+		NumberOfEpisodes    int      `json:"number_of_episodes"`
+		NumberOfSeasons     int      `json:"number_of_seasons"`
+		OriginCountry       []string `json:"origin_country"`
+		OriginalLanguage    string   `json:"original_language"`
+		OriginalName        string   `json:"original_name"`
+		Overview            string   `json:"overview"`
+		Popularity          float64  `json:"popularity"`
+		PosterPath          string   `json:"poster_path"`
+		ProductionCompanies []struct {
+			ID            int    `json:"id"`
+			LogoPath      string `json:"logo_path"`
+			Name          string `json:"name"`
+			OriginCountry string `json:"origin_country"`
+		} `json:"production_companies"`
+		Seasons []struct {
+			AirDate      string `json:"air_date"`
+			EpisodeCount int    `json:"episode_count"`
+			ID           int    `json:"id"`
+			Name         string `json:"name"`
+			Overview     string `json:"overview"`
+			PosterPath   string `json:"poster_path"`
+			SeasonNumber int    `json:"season_number"`
+		} `json:"seasons"`
+		Status      string  `json:"status"`
+		Type        string  `json:"type"`
+		VoteAverage float64 `json:"vote_average"`
+		VoteCount   int     `json:"vote_count"`
+	}
+
+	var data responseBody
+	urlPath := fmt.Sprintf(GET_TV_DETAIL, id)
+	if err := tmdb.request(urlPath, nil, &data); err != nil {
+		return nil, err
+	}
+	var firstAirDate, lastAirDate *time.Time
+	firstAirDate, lastAirDate = nil, nil
+	if len(data.FirstAirDate) > 0 {
+		t, err := time.Parse("2006-01-02", data.FirstAirDate)
+		if err != nil {
+			log.WithError(err).Error("Parse time error : " + data.FirstAirDate)
+		} else {
+			firstAirDate = &t
+		}
+	}
+	if len(data.LastAirDate) > 0 {
+		t, err := time.Parse("2006-01-02", data.LastAirDate)
+		if err != nil {
+			log.WithError(err).Error("Parse time error : " + data.LastAirDate)
+		} else {
+			lastAirDate = &t
+		}
+	}
+
+	genreIDs := []int64{}
+	for _, g := range data.Genres {
+		genreIDs = append(genreIDs, g.ID)
+	}
+	seasons := []models.Season{}
+	for _, s := range data.Seasons {
+		var airDate *time.Time
+		airDate = nil
+		if len(s.AirDate) > 0 {
+			t, err := time.Parse("2006-01-02", s.AirDate)
+			if err != nil {
+				log.WithError(err).Error("Parse time error : " + s.AirDate)
+			} else {
+				airDate = &t
+			}
+		}
+		seasons = append(seasons, models.Season{
+			AirDate:      airDate,
+			EpisodeCount: s.EpisodeCount,
+			Name:         s.Name,
+			Overview:     s.Overview,
+			PosterPath:   s.PosterPath,
+			SeasonNumber: s.SeasonNumber,
+		})
+	}
+	t := models.TV{
+		Provider:       "tmdb",
+		ProviderID:     data.ID,
+		BackdropPath:   data.BackdropPath,
+		CreatedBy:      data.CreatedBy,
+		EpisodeRunTime: data.EpisodeRunTime,
+		FirstAirDate:   firstAirDate,
+		GenreIds:       genreIDs,
+		Homepage:       data.Homepage,
+		InProduction:   data.InProduction,
+		LastAirDate:    lastAirDate,
+		LastEpisodeToAir: models.LastEpisodeToAir{
+			AirDate:        data.LastEpisodeToAir.AirDate,
+			EpisodeNumber:  data.LastEpisodeToAir.EpisodeNumber,
+			ID:             data.LastEpisodeToAir.ID,
+			Name:           data.LastEpisodeToAir.Name,
+			Overview:       data.LastEpisodeToAir.Overview,
+			ProductionCode: data.LastEpisodeToAir.ProductionCode,
+			SeasonNumber:   data.LastEpisodeToAir.SeasonNumber,
+			ShowID:         data.LastEpisodeToAir.ShowID,
+			StillPath:      data.LastEpisodeToAir.StillPath,
+			VoteAverage:    data.LastEpisodeToAir.VoteAverage,
+			VoteCount:      data.LastEpisodeToAir.VoteCount,
+		},
+		Name: data.Name,
+		NextEpisodeToAir: models.NextEpisodeToAir{
+			ID:             data.NextEpisodeToAir.ID,
+			AirDate:        data.NextEpisodeToAir.AirDate,
+			EpisodeNumber:  data.NextEpisodeToAir.EpisodeNumber,
+			Name:           data.NextEpisodeToAir.Name,
+			Overview:       data.NextEpisodeToAir.Overview,
+			ProductionCode: data.NextEpisodeToAir.ProductionCode,
+			SeasonNumber:   data.NextEpisodeToAir.SeasonNumber,
+			ShowID:         data.NextEpisodeToAir.ShowID,
+			StillPath:      data.NextEpisodeToAir.StillPath,
+			VoteAverage:    data.NextEpisodeToAir.VoteAverage,
+			VoteCount:      data.NextEpisodeToAir.VoteCount,
+		},
+		NumberOfEpisodes: data.NumberOfEpisodes,
+		NumberOfSeasons:  data.NumberOfSeasons,
+		OriginalLanguage: data.OriginalLanguage,
+		OriginalName:     data.OriginalName,
+		Overview:         data.Overview,
+		Popularity:       data.Popularity,
+		PosterPath:       data.PosterPath,
+		Status:           data.Status,
+		Type:             data.Type,
+		VoteAverage:      data.VoteAverage,
+		VoteCount:        data.VoteCount,
+		OriginCountry:    data.OriginCountry,
+		Seasons:          seasons,
+	}
+
+	return &t, nil
+}
+
+func (tmdb *tmdbRepository) GetTVSeasonVote(tvID uint, seasonID int) (voteAvg float64, voteCount int, err error) {
+	type body struct {
+		Episodes []struct {
+			AirDate        string        `json:"air_date"`
+			EpisodeNumber  int           `json:"episode_number"`
+			ID             int           `json:"id"`
+			Name           string        `json:"name"`
+			Overview       string        `json:"overview"`
+			ProductionCode interface{}   `json:"production_code"`
+			SeasonNumber   int           `json:"season_number"`
+			ShowID         int           `json:"show_id"`
+			StillPath      interface{}   `json:"still_path"`
+			VoteAverage    float64       `json:"vote_average"`
+			VoteCount      int           `json:"vote_count"`
+			Crew           []interface{} `json:"crew"`
+			GuestStars     []interface{} `json:"guest_stars"`
+		} `json:"episodes"`
+	}
+	var data body
+	urlPath := fmt.Sprintf(GET_TV_SEASON, tvID, seasonID)
+	if err := tmdb.request(urlPath, nil, &data); err != nil {
+		return 0, 0, err
+	}
+	for _, e := range data.Episodes {
+		voteCount += e.VoteCount
+		voteAvg += e.VoteAverage
+	}
+	total := len(data.Episodes)
+	voteAvg = math.Round(voteAvg/float64(total)*100) / 100
+	return voteAvg, voteCount, nil
 }
 
 func (tmdb *tmdbRepository) request(urlPath string, options map[string]string, v interface{}) error {

@@ -44,7 +44,7 @@ type Person struct {
 	Adult        bool           `json:"adult" gorm:"not null"`
 	ImdbID       string         `json:"imdbID" gorm:"type:varchar(127);not null"`
 	Homepage     string         `json:"homepage" gorm:"type:varchar(255);not null"`
-	AlsoKnownAs  pq.StringArray `json:"alsoKnownAs,omitempty" gorm:"type:varchar(127)[];not null"` // {"HTTP", "HTTPS"}
+	AlsoKnownAs  pq.StringArray `json:"alsoKnownAs,omitempty" gorm:"type:varchar(127)[];not null"`
 	ProfilePath  string         `json:"profilePath" gorm:"type:varchar(255);not null"`
 	Movies       []Movie        `gorm:"many2many:movie_people;association_foreignkey:id;foreignkey:id"`
 	CreatedAt    time.Time      `json:"createdAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
@@ -54,6 +54,60 @@ type Person struct {
 // Set User's table name to be `people`
 func (Person) TableName() string {
 	return "people"
+}
+
+type TV struct {
+	ID              int           `json:"id,omitempty" gorm:"primary_key"`
+	ProviderID      uint          `json:"-" gorm:"column:provider_id;not null;unique_index:idx_provider_TV"`
+	Provider        string        `json:"-" gorm:"type:varchar(127);not null;unique_index:idx_provider_TV"`
+	BackdropPath    string        `json:"backdrop_path" gorm:"type:varchar(255);not null"`
+	CreatedByString string        `json:"-" gorm:"type:jsonb;not null"`
+	EpisodeRunTime  pq.Int64Array `json:"episode_run_time" gorm:"type:integer[];not null"`
+	FirstAirDate    time.Time     `json:"first_air_date"`
+	GenreIds        pq.Int64Array `json:"genreIDs" gorm:"type:integer[];not null"`
+	Homepage        string        `json:"homepage" gorm:"type:varchar(255);not null"`
+	InProduction    bool          `json:"in_production"`
+	// Languages      []string      `json:"languages"`
+	LastAirDate            time.Time      `json:"last_air_date"`
+	LastEpisodeToAirString string         `json:"-" gorm:"type:jsonb;not null"`
+	Name                   string         `json:"name"`
+	NextEpisodeToAirString string         `json:"-" gorm:"type:jsonb;not null"`
+	NetworksString         string         `json:"-" gorm:"type:jsonb;not null"`
+	NumberOfEpisodes       int            `json:"number_of_episodes"`
+	NumberOfSeasons        int            `json:"number_of_seasons"`
+	OriginCountry          pq.StringArray `json:"origin_country" gorm:"type:varchar(127)[];not null"`
+	OriginalLanguage       string         `json:"original_language"`
+	OriginalName           string         `json:"original_name"`
+	Overview               string         `json:"overview"`
+	Popularity             float64        `json:"popularity"`
+	PosterPath             string         `json:"poster_path"`
+	// ProductionCompanies interface{} `json:"production_companies"`
+	Seasons     Season    `json:"seasons"`
+	Status      string    `json:"status"`
+	Type        string    `json:"type"`
+	VoteAverage float64   `json:"vote_average"`
+	VoteCount   int       `json:"vote_count"`
+	CreatedAt   time.Time `json:"createdAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
+	UpdatedAt   time.Time `json:"updatedAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
+}
+
+func (TV) TableName() string {
+	return "tv"
+}
+
+type Season struct {
+	ID           int       `json:"id,omitempty" gorm:"primary_key"`
+	TVID         int       `json:"-" gorm:"column:tv_id;not null"`
+	AirDate      time.Time `json:"airDate"`
+	EpisodeCount int       `json:"episode_count" gorm:"not null"`
+	Name         string    `json:"name" gorm:"type:varchar(255);not null"`
+	Overview     string    `json:"overview" gorm:"type:text;not null"`
+	PosterPath   string    `json:"poster_path" gorm:"type:varchar(255);not null"`
+	SeasonNumber int       `json:"season_number;not null"`
+	VoteAverage  float64   `json:"vote_average"`
+	VoteCount    int       `json:"vote_count"`
+	CreatedAt    time.Time `json:"createdAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
+	UpdatedAt    time.Time `json:"updatedAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 }
 
 func Migrate(rollback int) {
@@ -79,13 +133,34 @@ func Migrate(rollback int) {
 				return nil
 			},
 		},
+		{
+			ID: "201809150800",
+			Migrate: func(tx *gorm.DB) error {
+				if err := tx.AutoMigrate(&TV{}, &Season{}).Error; err != nil {
+					return err
+				}
+				if err := tx.Exec(`CREATE UNIQUE INDEX idx_tv_season ON "seasons"(tv_id, season_number)`).Error; err != nil {
+					return err
+				}
+				if err := tx.Model(&Season{}).AddForeignKey("tv_id", "tv(id)", "CASCADE", "NO ACTION").Error; err != nil {
+					return err
+				}
+				return nil
+			},
+			Rollback: func(tx *gorm.DB) error {
+				return nil
+			},
+		},
 	})
 	m.InitSchema(func(tx *gorm.DB) error {
-		if err := tx.AutoMigrate(&Movie{}, &Person{}).Error; err != nil {
+		if err := tx.AutoMigrate(&Movie{}, &Person{}, &TV{}, &Season{}).Error; err != nil {
 			return err
 		}
 		if err := tx.Table("movie_people").AddForeignKey("movie_id", "movies(id)", "CASCADE", "NO ACTION").
 			AddForeignKey("person_id", "people(id)", "CASCADE", "NO ACTION").Error; err != nil {
+			return err
+		}
+		if err := tx.Model(&Season{}).AddForeignKey("tv_id", "tvs(id)", "CASCADE", "CASCADE").Error; err != nil {
 			return err
 		}
 		return nil

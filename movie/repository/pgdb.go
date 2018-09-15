@@ -9,6 +9,7 @@ import (
 	"github.com/kunhou/TMDB/models"
 	"github.com/kunhou/TMDB/movie"
 	"github.com/kunhou/TMDB/utils"
+	"github.com/pkg/errors"
 )
 
 type pgsqlRepository struct {
@@ -109,4 +110,52 @@ func (p *pgsqlRepository) MovieDetail(id uint) (*models.Movie, error) {
 		return nil, err
 	}
 	return &m, nil
+}
+
+func (p *pgsqlRepository) TVStore(t *models.TV) (uint, error) {
+	if err := p.Conn.Where(models.TV{ProviderID: t.ProviderID, Provider: t.Provider}).
+		Assign(models.TV{
+			BackdropPath:     t.BackdropPath,
+			CreatedBy:        t.CreatedBy,
+			EpisodeRunTime:   t.EpisodeRunTime,
+			FirstAirDate:     t.FirstAirDate,
+			GenreIds:         t.GenreIds,
+			Homepage:         t.Homepage,
+			InProduction:     t.InProduction,
+			LastAirDate:      t.LastAirDate,
+			LastEpisodeToAir: t.LastEpisodeToAir,
+			Name:             t.Name,
+			NextEpisodeToAir: t.NextEpisodeToAir,
+			Networks:         t.Networks,
+			NumberOfEpisodes: t.NumberOfEpisodes,
+			NumberOfSeasons:  t.NumberOfSeasons,
+			OriginCountry:    t.OriginCountry,
+			OriginalLanguage: t.OriginalLanguage,
+			OriginalName:     t.OriginalName,
+			Overview:         t.Overview,
+			Popularity:       t.Popularity,
+			PosterPath:       t.PosterPath,
+			// Seasons:          t.Seasons,
+			Status:      t.Status,
+			Type:        t.Type,
+			VoteAverage: t.VoteAverage,
+			VoteCount:   t.VoteCount,
+		}).FirstOrCreate(&t).Error; err != nil {
+		return 0, errors.Wrap(err, "Store tv Fail")
+	}
+	for _, s := range t.Seasons {
+		if err := p.Conn.Where(models.Season{TVID: t.ID, SeasonNumber: s.SeasonNumber}).
+			Assign(models.Season{
+				AirDate:      s.AirDate,
+				EpisodeCount: s.EpisodeCount,
+				Name:         s.Name,
+				PosterPath:   s.PosterPath,
+				SeasonNumber: s.SeasonNumber,
+				VoteAverage:  s.VoteAverage,
+				VoteCount:    s.VoteCount,
+			}).FirstOrCreate(&s).Error; err != nil {
+			return 0, errors.Wrap(err, "Store Season Fail")
+		}
+	}
+	return t.ID, nil
 }
