@@ -29,17 +29,17 @@ type LastEpisodeToAir struct {
 	VoteCount      int     `json:"vote_count"`
 }
 type NextEpisodeToAir struct {
-	ID             int    `json:"id"`
-	AirDate        string `json:"airDate"`
-	EpisodeNumber  int    `json:"episode_number"`
-	Name           string `json:"name"`
-	Overview       string `json:"overview"`
-	ProductionCode string `json:"production_code"`
-	SeasonNumber   int    `json:"season_number"`
-	ShowID         int    `json:"show_id"`
-	StillPath      string `json:"still_path"`
-	VoteAverage    int    `json:"vote_average"`
-	VoteCount      int    `json:"vote_count"`
+	ID             int     `json:"id"`
+	AirDate        string  `json:"airDate"`
+	EpisodeNumber  int     `json:"episode_number"`
+	Name           string  `json:"name"`
+	Overview       string  `json:"overview"`
+	ProductionCode string  `json:"production_code"`
+	SeasonNumber   int     `json:"season_number"`
+	ShowID         int     `json:"show_id"`
+	StillPath      string  `json:"still_path"`
+	VoteAverage    float64 `json:"vote_average"`
+	VoteCount      int     `json:"vote_count"`
 }
 type Networks struct {
 	Name          string `json:"name"`

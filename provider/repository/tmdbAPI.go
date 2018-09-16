@@ -300,17 +300,17 @@ func (tmdb *tmdbRepository) GetTVDetail(id int) (*models.TV, error) {
 		} `json:"last_episode_to_air"`
 		Name             string `json:"name"`
 		NextEpisodeToAir struct {
-			AirDate        string `json:"air_date"`
-			EpisodeNumber  int    `json:"episode_number"`
-			ID             int    `json:"id"`
-			Name           string `json:"name"`
-			Overview       string `json:"overview"`
-			ProductionCode string `json:"production_code"`
-			SeasonNumber   int    `json:"season_number"`
-			ShowID         int    `json:"show_id"`
-			StillPath      string `json:"still_path"`
-			VoteAverage    int    `json:"vote_average"`
-			VoteCount      int    `json:"vote_count"`
+			AirDate        string  `json:"air_date"`
+			EpisodeNumber  int     `json:"episode_number"`
+			ID             int     `json:"id"`
+			Name           string  `json:"name"`
+			Overview       string  `json:"overview"`
+			ProductionCode string  `json:"production_code"`
+			SeasonNumber   int     `json:"season_number"`
+			ShowID         int     `json:"show_id"`
+			StillPath      string  `json:"still_path"`
+			VoteAverage    float64 `json:"vote_average"`
+			VoteCount      int     `json:"vote_count"`
 		} `json:"next_episode_to_air"`
 		Networks []struct {
 			Name          string `json:"name"`
