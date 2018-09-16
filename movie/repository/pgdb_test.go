@@ -276,6 +276,8 @@ func Test_pgsqlRepository_TVStore(t *testing.T) {
 					EpisodeRunTime: []int64{54},
 					GenreIds:       []int64{54},
 					OriginCountry:  []string{},
+					VoteAverage:    12.2,
+					VoteCount:      12,
 				},
 			},
 			0,

@@ -152,8 +152,8 @@ type Season struct {
 	Overview     string     `json:"overview"`
 	PosterPath   string     `json:"poster_path"`
 	SeasonNumber int        `json:"season_number;not null;unique_index:idx_tv_season"`
-	VoteAverage  float64    `json:"vote_average"`
-	VoteCount    int        `json:"vote_count"`
+	VoteAverage  float64    `json:"vote_average" gorm:"not null;default:'0'"`
+	VoteCount    int        `json:"vote_count"  gorm:"not null;default:'0'"`
 	CreatedAt    time.Time  `json:"createdAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 	UpdatedAt    time.Time  `json:"updatedAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 }

@@ -85,8 +85,8 @@ type TV struct {
 	Seasons     Season    `json:"seasons"`
 	Status      string    `json:"status"`
 	Type        string    `json:"type"`
-	VoteAverage float64   `json:"vote_average"`
-	VoteCount   int       `json:"vote_count"`
+	VoteAverage float64   `json:"vote_average" gorm:"not null;default:'0'"`
+	VoteCount   int       `json:"vote_count"  gorm:"not null;default:'0'"`
 	CreatedAt   time.Time `json:"createdAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 	UpdatedAt   time.Time `json:"updatedAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 }
@@ -104,8 +104,8 @@ type Season struct {
 	Overview     string    `json:"overview" gorm:"type:text;not null"`
 	PosterPath   string    `json:"poster_path" gorm:"type:varchar(255);not null"`
 	SeasonNumber int       `json:"season_number;not null"`
-	VoteAverage  float64   `json:"vote_average"`
-	VoteCount    int       `json:"vote_count"`
+	VoteAverage  float64   `json:"vote_average" gorm:"not null;default:'0'"`
+	VoteCount    int       `json:"vote_count"  gorm:"not null;default:'0'"`
 	CreatedAt    time.Time `json:"createdAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 	UpdatedAt    time.Time `json:"updatedAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 }
@@ -134,7 +134,7 @@ func Migrate(rollback int) {
 			},
 		},
 		{
-			ID: "201809150800",
+			ID: "201809151000",
 			Migrate: func(tx *gorm.DB) error {
 				if err := tx.AutoMigrate(&TV{}, &Season{}).Error; err != nil {
 					return err

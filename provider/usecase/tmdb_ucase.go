@@ -134,13 +134,13 @@ func (tu *tmdbUsecase) CreateBatchStorePersonTask() chan *models.Person {
 
 func (tu *tmdbUsecase) StartCrawlerTV(ch chan *models.TV) {
 	lastestID, err := tu.providerRepo.GetTVLastID()
-	log.Info("tv lastestID: ", lastestID)
+	log.Debug("tv lastestID: ", lastestID)
 	if err != nil {
 		log.WithError(err).Error("Get LastID Fail")
 	}
 	for id := 1; id <= lastestID; id++ {
 		time.Sleep(CrawlerInterval)
-		log.Info("tv id: ", id)
+		log.Debug("tv id: ", id)
 		tv, err := tu.providerRepo.GetTVDetail(id)
 		if err != nil {
 			if _, ok := err.(provider.APINotFoundError); !ok {
@@ -149,20 +149,16 @@ func (tu *tmdbUsecase) StartCrawlerTV(ch chan *models.TV) {
 			}
 			continue
 		}
-		tAvg, tCount, total := float64(0), 0, 0
-		for _, s := range tv.Seasons {
+		for i, _ := range tv.Seasons {
 			time.Sleep(CrawlerInterval)
-			avg, count, err := tu.providerRepo.GetTVSeasonVote(uint(id), s.SeasonNumber)
+			avg, count, err := tu.providerRepo.GetTVSeasonVote(uint(id), tv.Seasons[i].SeasonNumber)
 			if err != nil {
 				log.WithError(err).Error("get tv season vote fail")
 				continue
 			}
-			total++
-			tAvg += avg
-			tCount += count
+			tv.Seasons[i].VoteAverage = avg
+			tv.Seasons[i].VoteCount = count
 		}
-		tv.VoteCount = tCount
-		tv.VoteAverage = tAvg / float64(tCount)
 		ch <- tv
 	}
 	return

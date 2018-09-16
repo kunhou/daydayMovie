@@ -46,8 +46,20 @@ func WithFields(fields Fields) *logrus.Entry {
 	return logrus.WithFields(fields)
 }
 
+func Debug(args ...interface{}) {
+	logrus.Debug(args...)
+}
+
+func Debugf(format string, args ...interface{}) {
+	logrus.Debugf(format, args...)
+}
+
 func Info(args ...interface{}) {
 	logrus.Info(args...)
+}
+
+func Infof(format string, args ...interface{}) {
+	logrus.Infof(format, args...)
 }
 
 func Error(args ...interface{}) {

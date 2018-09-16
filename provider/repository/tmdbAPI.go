@@ -475,12 +475,14 @@ func (tmdb *tmdbRepository) GetTVSeasonVote(tvID uint, seasonID int) (voteAvg fl
 	if err := tmdb.request(urlPath, nil, &data); err != nil {
 		return 0, 0, err
 	}
+	voteTotalPoint := float64(0)
 	for _, e := range data.Episodes {
 		voteCount += e.VoteCount
-		voteAvg += e.VoteAverage
+		voteTotalPoint += e.VoteAverage * float64(e.VoteCount)
 	}
-	total := len(data.Episodes)
-	voteAvg = math.Round(voteAvg/float64(total)*100) / 100
+	if voteCount > 0 {
+		voteAvg = math.Round(voteTotalPoint*100/float64(voteCount)) / float64(100)
+	}
 	return voteAvg, voteCount, nil
 }
 
