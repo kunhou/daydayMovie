@@ -42,6 +42,7 @@ func Setting(pu provider.ProviderUsecase, mu movie.MovieUsecase) *gin.Engine {
 		v1.GET("movies", mHttpHandler.MovieList)
 		v1.GET("movies/:id", mHttpHandler.MovieDetail)
 		v1.GET("tv", mHttpHandler.TVList)
+		v1.GET("people", mHttpHandler.PeopleList)
 		manual := v1.Group("manual")
 		{
 			manual.POST("crawler/:type", pHttpHandler.ManualCrawlerTask)

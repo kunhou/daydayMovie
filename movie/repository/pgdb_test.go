@@ -297,3 +297,53 @@ func Test_pgsqlRepository_TVStore(t *testing.T) {
 		})
 	}
 }
+
+func Test_pgsqlRepository_PeopleList(t *testing.T) {
+	type fields struct {
+		Conn *gorm.DB
+	}
+	type args struct {
+		page   int
+		limit  int
+		order  map[string]string
+		search map[string]interface{}
+	}
+	btime := time.Date(2018, time.June, 24, 0, 0, 0, 0, time.UTC)
+	tests := []struct {
+		name    string
+		p       pgsqlRepository
+		args    args
+		want    []*models.Person
+		want1   *models.Page
+		wantErr bool
+	}{
+		{
+			"ok",
+			pgsqlRepository{db.DB},
+			args{2, 10, map[string]string{"popularity": "desc"}, map[string]interface{}{
+				"birthday": btime,
+			}},
+			nil,
+			nil,
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1, err := tt.p.PeopleList(tt.args.page, tt.args.limit, tt.args.order, tt.args.search)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("pgsqlRepository.PeopleList() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("pgsqlRepository.PeopleList() got = %#v, want %v", got, tt.want)
+				for _, m := range got {
+					t.Errorf(" movie = %+v", m)
+				}
+			}
+			if !reflect.DeepEqual(got1, tt.want1) {
+				t.Errorf("pgsqlRepository.PeopleList() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}

@@ -39,3 +39,7 @@ func (m *MovieUsecase) TVStore(t *models.TV) (uint, error) {
 func (m *MovieUsecase) TVList(page, limit int, order map[string]string) ([]*models.TVIntro, *models.Page, error) {
 	return m.movieRepos.TVList(page, limit, order)
 }
+
+func (m *MovieUsecase) PeopleList(page, limit int, order map[string]string, search map[string]interface{}) ([]*models.Person, *models.Page, error) {
+	return m.movieRepos.PeopleList(page, limit, order, search)
+}

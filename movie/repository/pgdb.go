@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jinzhu/gorm"
 	"github.com/kunhou/TMDB/log"
@@ -188,4 +189,40 @@ func (p *pgsqlRepository) TVList(page, limit int, order map[string]string) ([]*m
 		Page:         uint(page),
 	}
 	return tvs, &pages, nil
+}
+
+func (p *pgsqlRepository) PeopleList(page, limit int, order map[string]string, search map[string]interface{}) ([]*models.Person, *models.Page, error) {
+	if limit == 0 {
+		limit = 20
+	}
+	if page == 0 {
+		page = 1
+	}
+	db := p.Conn
+	// if o, ok := order["popularity"]; ok && utils.ValidOrderType(o) {
+	// 	db = db.Order("popularity " + o)
+	// }
+	offset := (page - 1) * limit
+	people := []*models.Person{}
+	var count uint
+	// date_part('month', birthday) = 4 AND date_part('day', birthday) = 4
+	if b, ok := search["birthday"]; ok {
+		bTime := b.(time.Time)
+		db = db.Where("date_part('month', birthday) = ? AND date_part('day', birthday) = ?", bTime.Month(), bTime.Day())
+		delete(search, "birthday")
+	}
+	if err := db.Table("people").Where(search).Count(&count).Error; err != nil {
+		return people, nil, err
+	}
+	if err := db.Offset(offset).Where(search).Limit(limit).Find(&people).Error; err != nil {
+		return people, nil, err
+	}
+
+	totalPages := count/uint(limit) + 1
+	pages := models.Page{
+		TotalPages:   uint(totalPages),
+		TotalResults: count,
+		Page:         uint(page),
+	}
+	return people, &pages, nil
 }

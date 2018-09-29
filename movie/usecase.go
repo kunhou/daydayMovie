@@ -9,4 +9,5 @@ type MovieUsecase interface {
 	MovieDetail(id uint) (*models.Movie, error)
 	TVStore(t *models.TV) (uint, error)
 	TVList(page, limit int, order map[string]string) ([]*models.TVIntro, *models.Page, error)
+	PeopleList(page, limit int, order map[string]string, search map[string]interface{}) ([]*models.Person, *models.Page, error)
 }
