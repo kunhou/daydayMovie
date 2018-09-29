@@ -8,4 +8,5 @@ type MovieRepository interface {
 	MovieList(page, limit int, order map[string]string) ([]*models.MovieIntro, *models.Page, error)
 	MovieDetail(id uint) (*models.Movie, error)
 	TVStore(t *models.TV) (uint, error)
+	TVList(page, limit int, order map[string]string) ([]*models.TVIntro, *models.Page, error)
 }

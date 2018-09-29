@@ -159,3 +159,33 @@ func (p *pgsqlRepository) TVStore(t *models.TV) (uint, error) {
 	}
 	return t.ID, nil
 }
+
+func (p *pgsqlRepository) TVList(page, limit int, order map[string]string) ([]*models.TVIntro, *models.Page, error) {
+	if limit == 0 {
+		limit = 20
+	}
+	if page == 0 {
+		page = 1
+	}
+	db := p.Conn
+	if o, ok := order["popularity"]; ok && utils.ValidOrderType(o) {
+		db = db.Order("popularity " + o)
+	}
+	offset := (page - 1) * limit
+	tvs := []*models.TVIntro{}
+	var count uint
+	if err := db.Table("tv").Count(&count).Error; err != nil {
+		return tvs, nil, err
+	}
+	if err := db.Offset(offset).Limit(limit).Find(&tvs).Error; err != nil {
+		return tvs, nil, err
+	}
+
+	totalPages := count/uint(limit) + 1
+	pages := models.Page{
+		TotalPages:   uint(totalPages),
+		TotalResults: count,
+		Page:         uint(page),
+	}
+	return tvs, &pages, nil
+}

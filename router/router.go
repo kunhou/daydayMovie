@@ -41,6 +41,7 @@ func Setting(pu provider.ProviderUsecase, mu movie.MovieUsecase) *gin.Engine {
 		v1.Any("authentication/:provider/redirect", providerRedirect)
 		v1.GET("movies", mHttpHandler.MovieList)
 		v1.GET("movies/:id", mHttpHandler.MovieDetail)
+		v1.GET("tv", mHttpHandler.TVList)
 		manual := v1.Group("manual")
 		{
 			manual.POST("crawler/:type", pHttpHandler.ManualCrawlerTask)

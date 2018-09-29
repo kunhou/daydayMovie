@@ -35,3 +35,7 @@ func (m *MovieUsecase) MovieDetail(id uint) (*models.Movie, error) {
 func (m *MovieUsecase) TVStore(t *models.TV) (uint, error) {
 	return m.movieRepos.TVStore(t)
 }
+
+func (m *MovieUsecase) TVList(page, limit int, order map[string]string) ([]*models.TVIntro, *models.Page, error) {
+	return m.movieRepos.TVList(page, limit, order)
+}

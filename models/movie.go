@@ -34,6 +34,8 @@ type MovieIntro struct {
 	PosterPath    string  `json:"posterPath" gorm:"type:varchar(255);not null"`
 	BackdropPath  string  `json:"backdropPath" gorm:"type:varchar(255);not null"`
 	Popularity    float32 `json:"popularity"`
+	VoteAverage   float64 `json:"vote_average"`
+	VoteCount     int     `json:"vote_count"`
 }
 
 func (MovieIntro) TableName() string {

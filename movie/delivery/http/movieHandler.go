@@ -19,6 +19,10 @@ type movieListResponse struct {
 	*models.Page
 	Results []*models.MovieIntro `json:"results"`
 }
+type tvListResponse struct {
+	*models.Page
+	Results []*models.TVIntro `json:"results"`
+}
 
 func NewMovieHttpHandler(mu movie.MovieUsecase) *HttpMovieHandler {
 	handler := &HttpMovieHandler{
@@ -72,4 +76,35 @@ func (ph *HttpMovieHandler) MovieDetail(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, movie)
+}
+
+func (ph *HttpMovieHandler) TVList(c *gin.Context) {
+	var page, limit int
+	orderBy := make(map[string]string)
+	if p, ok := c.GetQuery("page"); ok {
+		if pageInt, err := strconv.Atoi(p); err == nil {
+			page = pageInt
+		}
+	}
+	if l, ok := c.GetQuery("limit"); ok {
+		if limitInt, err := strconv.Atoi(l); err == nil {
+			limit = limitInt
+		}
+	}
+	if sb, ok := c.GetQuery("sort_by"); ok {
+		sbs := strings.Split(sb, ".")
+		if len(sbs) == 2 {
+			orderBy[sbs[0]] = sbs[1]
+		}
+	}
+	tvList, pageInfo, err := ph.MUsecase.TVList(page, limit, orderBy)
+	if err != nil {
+		httputil.ResponseFail(c, http.StatusInternalServerError, 4001, "Internal Server error while fetching movie list", err)
+		return
+	}
+
+	c.JSON(http.StatusOK, tvListResponse{
+		pageInfo,
+		tvList,
+	})
 }
