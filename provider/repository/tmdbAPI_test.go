@@ -150,7 +150,7 @@ func Test_tmdbRepository_GetPersonDetail(t *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("tmdbRepository.GetPersonDetail() = %v, want %v", got, tt.want)
+				t.Errorf("tmdbRepository.GetPersonDetail() = %+v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -200,7 +200,7 @@ func Test_tmdbRepository_GetTVSeasonVote(t *testing.T) {
 		token string
 	}
 	type args struct {
-		tvID     int
+		tvID     uint
 		seasonID int
 	}
 	tests := []struct {

@@ -21,18 +21,19 @@ func NewPGsqlPersonRepository(Conn *gorm.DB) person.PersonRepository {
 func (p *pgsqlRepository) Store(pn *models.Person) (uint, error) {
 	if err := p.Conn.Where(models.Person{ProviderID: pn.ProviderID, Provider: pn.Provider}).
 		Assign(models.Person{
-			Name:         pn.Name,
-			Birthday:     pn.Birthday,
-			Deathday:     pn.Deathday,
-			Gender:       pn.Gender,
-			Biography:    pn.Biography,
-			Popularity:   pn.Popularity,
-			PlaceOfBirth: pn.PlaceOfBirth,
-			Adult:        pn.Adult,
-			ImdbID:       pn.ImdbID,
-			Homepage:     pn.Homepage,
-			AlsoKnownAs:  pn.AlsoKnownAs,
-			ProfilePath:  pn.ProfilePath,
+			Name:               pn.Name,
+			Birthday:           pn.Birthday,
+			Deathday:           pn.Deathday,
+			Gender:             pn.Gender,
+			Biography:          pn.Biography,
+			Popularity:         pn.Popularity,
+			PlaceOfBirth:       pn.PlaceOfBirth,
+			Adult:              pn.Adult,
+			ImdbID:             pn.ImdbID,
+			Homepage:           pn.Homepage,
+			AlsoKnownAs:        pn.AlsoKnownAs,
+			ProfilePath:        pn.ProfilePath,
+			KnownForDepartment: pn.KnownForDepartment,
 		}).FirstOrCreate(&pn).Error; err != nil {
 		return 0, err
 	}
@@ -61,12 +62,12 @@ func (p *pgsqlRepository) BatchStore(people []*models.Person) error {
 		if err != nil {
 			log.WithError(err).Error("GenreIds Parse fail")
 		}
-		row := fmt.Sprintf("(%d,'%s','%s',%s,%s,'%d','%s','%f','%s','%t','%s','%s','%s', '%s', now(), now())",
-			p.ProviderID, p.Provider, strings.Replace(p.Name, "'", "''", -1), birthday, deathday, p.Gender, strings.Replace(p.Biography, "'", "''", -1), p.Popularity, strings.Replace(p.PlaceOfBirth, "'", "''", -1), p.Adult, p.ImdbID, p.Homepage, strings.Replace(alsoKnows.(string), "'", "''", -1), p.ProfilePath)
+		row := fmt.Sprintf("(%d,'%s','%s',%s,%s,'%d','%s','%f','%s','%t','%s','%s','%s', '%s', '%s', now(), now())",
+			p.ProviderID, p.Provider, strings.Replace(p.Name, "'", "''", -1), birthday, deathday, p.Gender, strings.Replace(p.Biography, "'", "''", -1), p.Popularity, strings.Replace(p.PlaceOfBirth, "'", "''", -1), p.Adult, p.ImdbID, p.Homepage, strings.Replace(alsoKnows.(string), "'", "''", -1), p.ProfilePath, p.KnownForDepartment)
 		rows = append(rows, row)
 	}
-	sqlStmt := "INSERT INTO people (provider_id,provider,name,birthday,deathday,gender,biography,popularity,place_of_birth,adult,imdb_id,homepage,also_known_as,profile_path,created_at,updated_at) VALUES %s ON CONFLICT (provider, provider_id) DO UPDATE SET " +
-		"name = excluded.name, birthday = excluded.birthday, deathday = excluded.deathday, gender = excluded.gender, biography = excluded.biography, popularity = excluded.popularity, place_of_birth = excluded.place_of_birth, adult = excluded.adult, imdb_id = excluded.imdb_id, homepage = excluded.homepage, also_known_as = excluded.also_known_as, profile_path = excluded.profile_path, updated_at = excluded.updated_at;"
+	sqlStmt := "INSERT INTO people (provider_id,provider,name,birthday,deathday,gender,biography,popularity,place_of_birth,adult,imdb_id,homepage,also_known_as,profile_path,known_for_department,created_at,updated_at) VALUES %s ON CONFLICT (provider, provider_id) DO UPDATE SET " +
+		"name = excluded.name, birthday = excluded.birthday, deathday = excluded.deathday, gender = excluded.gender, biography = excluded.biography, popularity = excluded.popularity, place_of_birth = excluded.place_of_birth, adult = excluded.adult, imdb_id = excluded.imdb_id, homepage = excluded.homepage, also_known_as = excluded.also_known_as, profile_path = excluded.profile_path, updated_at = excluded.updated_at, known_for_department = excluded.known_for_department;"
 	sqlStmt = fmt.Sprintf(sqlStmt, strings.Join(rows, ","))
 	if err := p.Conn.Exec(sqlStmt).Error; err != nil {
 		return err

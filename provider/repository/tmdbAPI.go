@@ -242,20 +242,21 @@ func (tmdb *tmdbRepository) GetPersonDetail(id int) (*models.Person, error) {
 	}
 
 	return &models.Person{
-		Provider:     "tmdb",
-		ProviderID:   data.ID,
-		Name:         data.Name,
-		Birthday:     birthday,
-		Deathday:     deathday,
-		Gender:       data.Gender,
-		Biography:    data.Biography,
-		Popularity:   data.Popularity,
-		PlaceOfBirth: data.PlaceOfBirth,
-		Adult:        data.Adult,
-		ImdbID:       data.ImdbID,
-		Homepage:     data.Homepage,
-		AlsoKnownAs:  data.AlsoKnownAs,
-		ProfilePath:  data.ProfilePath,
+		Provider:           "tmdb",
+		ProviderID:         data.ID,
+		Name:               data.Name,
+		Birthday:           birthday,
+		Deathday:           deathday,
+		Gender:             data.Gender,
+		Biography:          data.Biography,
+		Popularity:         data.Popularity,
+		PlaceOfBirth:       data.PlaceOfBirth,
+		Adult:              data.Adult,
+		ImdbID:             data.ImdbID,
+		Homepage:           data.Homepage,
+		AlsoKnownAs:        data.AlsoKnownAs,
+		ProfilePath:        data.ProfilePath,
+		KnownForDepartment: data.KnownForDepartment,
 	}, nil
 }
 
