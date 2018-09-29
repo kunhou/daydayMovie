@@ -159,16 +159,16 @@ type Season struct {
 }
 
 type TVIntro struct {
-	ID           uint       `json:"id" gorm:"primary_key"`
-	Name         string     `json:"name"`
-	Overview     string     `json:"overview"`
-	OriginalName string     `json:"original_name"`
-	PosterPath   string     `json:"posterPath" gorm:"type:varchar(255);not null"`
-	BackdropPath string     `json:"backdropPath" gorm:"type:varchar(255);not null"`
-	Popularity   float32    `json:"popularity"`
-	VoteAverage  float64    `json:"vote_average"`
-	VoteCount    int        `json:"vote_count"`
-	LastAirDate  *time.Time `json:"last_air_date"`
+	ID            uint       `json:"id" gorm:"primary_key"`
+	Title         string     `json:"title" gorm:"column:name"`
+	Overview      string     `json:"overview"`
+	OriginalTitle string     `json:"original_title" gorm:"column:original_name"`
+	PosterPath    string     `json:"posterPath" gorm:"type:varchar(255);not null"`
+	BackdropPath  string     `json:"backdropPath" gorm:"type:varchar(255);not null"`
+	Popularity    float32    `json:"popularity"`
+	VoteAverage   float64    `json:"vote_average"`
+	VoteCount     int        `json:"vote_count"`
+	LastAirDate   *time.Time `json:"last_air_date"`
 }
 
 func (TVIntro) TableName() string {
