@@ -36,6 +36,7 @@ type MovieIntro struct {
 	Popularity    float32 `json:"popularity"`
 	VoteAverage   float64 `json:"vote_average"`
 	VoteCount     int     `json:"vote_count"`
+	Overview      string  `json:"overview" gorm:"type:text;not null"`
 }
 
 func (MovieIntro) TableName() string {
