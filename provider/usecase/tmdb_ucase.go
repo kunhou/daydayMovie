@@ -28,13 +28,12 @@ func (tu *tmdbUsecase) StartCrawlerMovie(ch chan *models.Movie) {
 	if err != nil {
 		log.WithError(err).Error("Get LastID Fail")
 	}
-	for id := 1; id <= lastestID; id++ {
+	for id := lastestID; id > 0; id-- {
 		time.Sleep(CrawlerInterval)
 		m, err := tu.providerRepo.GetMovieDetail(id)
 		if err != nil {
 			if _, ok := err.(provider.APINotFoundError); !ok {
 				log.WithError(err).Error("Get discover Fail")
-				continue
 			}
 			continue
 		}
@@ -48,7 +47,7 @@ func (tu *tmdbUsecase) StartCrawlerPerson(ch chan *models.Person) {
 	if err != nil {
 		log.WithError(err).Error("Get LastID Fail")
 	}
-	for id := 1; id <= lastestID; id++ {
+	for id := lastestID; id > 0; id-- {
 		time.Sleep(CrawlerInterval)
 		person, err := tu.providerRepo.GetPersonDetail(id)
 		if err != nil {
@@ -138,14 +137,13 @@ func (tu *tmdbUsecase) StartCrawlerTV(ch chan *models.TV) {
 	if err != nil {
 		log.WithError(err).Error("Get LastID Fail")
 	}
-	for id := 1; id <= lastestID; id++ {
+	for id := lastestID; id > 0; id-- {
 		time.Sleep(CrawlerInterval)
 		log.Debug("tv id: ", id)
 		tv, err := tu.providerRepo.GetTVDetail(id)
 		if err != nil {
 			if _, ok := err.(provider.APINotFoundError); !ok {
 				log.WithError(err).Error("Get discover Fail")
-				continue
 			}
 			continue
 		}
