@@ -29,7 +29,7 @@ func (tu *tmdbUsecase) StartCrawlerMovie(ch chan *models.Movie) {
 		log.WithError(err).Error("Get LastID Fail")
 	}
 	for id := lastestID; id > 0; id-- {
-		time.Sleep(CrawlerInterval)
+		// time.Sleep(CrawlerInterval)
 		m, err := tu.providerRepo.GetMovieDetail(id)
 		if err != nil {
 			if _, ok := err.(provider.APINotFoundError); !ok {
@@ -48,7 +48,7 @@ func (tu *tmdbUsecase) StartCrawlerPerson(ch chan *models.Person) {
 		log.WithError(err).Error("Get LastID Fail")
 	}
 	for id := lastestID; id > 0; id-- {
-		time.Sleep(CrawlerInterval)
+		// time.Sleep(CrawlerInterval)
 		person, err := tu.providerRepo.GetPersonDetail(id)
 		if err != nil {
 			if _, ok := err.(provider.APINotFoundError); !ok {
@@ -138,7 +138,7 @@ func (tu *tmdbUsecase) StartCrawlerTV(ch chan *models.TV) {
 		log.WithError(err).Error("Get LastID Fail")
 	}
 	for id := lastestID; id > 0; id-- {
-		time.Sleep(CrawlerInterval)
+		// time.Sleep(CrawlerInterval)
 		log.Debug("tv id: ", id)
 		tv, err := tu.providerRepo.GetTVDetail(id)
 		if err != nil {
@@ -148,7 +148,7 @@ func (tu *tmdbUsecase) StartCrawlerTV(ch chan *models.TV) {
 			continue
 		}
 		for i, _ := range tv.Seasons {
-			time.Sleep(CrawlerInterval)
+			// time.Sleep(CrawlerInterval)
 			avg, count, err := tu.providerRepo.GetTVSeasonVote(uint(id), tv.Seasons[i].SeasonNumber)
 			if err != nil {
 				log.WithError(err).Error("get tv season vote fail")

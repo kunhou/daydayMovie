@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"path"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/kunhou/TMDB/log"
@@ -487,7 +488,14 @@ func (tmdb *tmdbRepository) GetTVSeasonVote(tvID uint, seasonID int) (voteAvg fl
 	return voteAvg, voteCount, nil
 }
 
+var requestMutex sync.Mutex
+
+const CrawlerInterval = 700 * time.Millisecond
+
 func (tmdb *tmdbRepository) request(urlPath string, options map[string]string, v interface{}) error {
+	time.Sleep(CrawlerInterval)
+	requestMutex.Lock()
+	defer requestMutex.Unlock()
 	u, err := url.Parse(apiURL)
 	u.Path = path.Join(u.Path, urlPath)
 	q := url.Values{}
