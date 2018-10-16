@@ -206,9 +206,6 @@ func Test_pgsqlRepository_List(t *testing.T) {
 }
 
 func Test_pgsqlRepository_MovieDetail(t *testing.T) {
-	type fields struct {
-		Conn *gorm.DB
-	}
 	type args struct {
 		id uint
 	}
@@ -343,6 +340,80 @@ func Test_pgsqlRepository_PeopleList(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got1, tt.want1) {
 				t.Errorf("pgsqlRepository.PeopleList() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
+
+func Test_pgsqlRepository_CreditStore(t *testing.T) {
+	type args struct {
+		c *models.Credit
+	}
+	o1 := 51
+	o2 := 52
+	d1 := "directing"
+	tests := []struct {
+		name    string
+		p       pgsqlRepository
+		args    args
+		want    uint
+		wantErr bool
+	}{
+		{
+			"ok",
+			pgsqlRepository{db.DB},
+			args{
+				&models.Credit{
+					PersonID:   1211,
+					Cast:       "tv",
+					Type:       "crew",
+					CastID:     12,
+					Department: &d1,
+				},
+			},
+			0,
+			false,
+		},
+		{
+			"ok",
+			pgsqlRepository{db.DB},
+			args{
+				&models.Credit{
+					PersonID: 1210,
+					Cast:     "movie",
+					Type:     "cast",
+					CastID:   12,
+					Order:    &o1,
+				},
+			},
+			0,
+			false,
+		},
+		{
+			"ok",
+			pgsqlRepository{db.DB},
+			args{
+				&models.Credit{
+					PersonID: 1210,
+					Cast:     "movie",
+					Type:     "cast",
+					CastID:   12,
+					Order:    &o2,
+				},
+			},
+			0,
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.p.CreditStore(tt.args.c)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("pgsqlRepository.CreditStore() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("pgsqlRepository.CreditStore() = %v, want %v", got, tt.want)
 			}
 		})
 	}

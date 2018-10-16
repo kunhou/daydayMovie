@@ -29,6 +29,7 @@ type Movie struct {
 
 type MovieIntro struct {
 	ID            uint    `json:"id" gorm:"primary_key"`
+	ProviderID    uint    `json:"-" gorm:"column:provider_id;not null;unique_index:idx_provider_movie"`
 	Title         string  `json:"title" gorm:"type:varchar(255);not null;index"`
 	OriginalTitle string  `json:"originalTitle" gorm:"type:varchar(255);not null;index"`
 	PosterPath    string  `json:"posterPath" gorm:"type:varchar(255);not null"`

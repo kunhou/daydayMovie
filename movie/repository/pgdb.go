@@ -83,6 +83,8 @@ func (p *pgsqlRepository) MovieList(page, limit int, order map[string]string) ([
 	db := p.Conn
 	if o, ok := order["popularity"]; ok && utils.ValidOrderType(o) {
 		db = db.Order("popularity " + o)
+	} else if od, ok := order["id"]; ok {
+		db = db.Order("id " + od)
 	}
 	offset := (page - 1) * limit
 	movies := []*models.MovieIntro{}
@@ -225,4 +227,52 @@ func (p *pgsqlRepository) PeopleList(page, limit int, order map[string]string, s
 		Page:         uint(page),
 	}
 	return people, &pages, nil
+}
+
+func (p *pgsqlRepository) PeopleInfoByIDs(pIDs []uint) ([]*models.PersonIntro, error) {
+	db := p.Conn
+	peopleIntros := []*models.PersonIntro{}
+	if err := db.Where("provider_id IN (?)", pIDs).Find(&peopleIntros).Error; err != nil && err != gorm.ErrRecordNotFound {
+		return peopleIntros, err
+	}
+	return peopleIntros, nil
+}
+
+func (p *pgsqlRepository) PeopleIDByProviderID(pID uint) (uint, error) {
+	db := p.Conn
+	peopleIntro := models.PersonIntro{}
+	if err := db.Where("provider_id = ?", pID).First(&peopleIntro).Error; err != nil {
+		return 0, err
+	}
+	return peopleIntro.ID, nil
+}
+
+func (p *pgsqlRepository) CreditIndex(castType string, castIDs *[]uint, peopleIDs *[]uint, department *string) ([]*models.Credit, error) {
+	db := p.Conn
+	credits := []*models.Credit{}
+	db = db.Where("cast", castType)
+	if castIDs != nil {
+		db = db.Where("cast_id IN (?)", castIDs)
+	}
+	if peopleIDs != nil {
+		db = db.Where("person_id IN (?)", peopleIDs)
+	}
+	if department != nil {
+		db = db.Where("department", department)
+	}
+	if err := db.Find(&credits).Error; err != nil && err != gorm.ErrRecordNotFound {
+		return credits, err
+	}
+	return credits, nil
+}
+
+func (p *pgsqlRepository) CreditStore(c *models.Credit) (uint, error) {
+	if err := p.Conn.Where(models.Credit{Cast: c.Cast, CastID: c.CastID, PersonID: c.PersonID, Type: c.Type}).
+		Assign(models.Credit{
+			Order:      c.Order,
+			Department: c.Department,
+		}).FirstOrCreate(&c).Error; err != nil {
+		return 0, errors.Wrap(err, "Store credit Fail")
+	}
+	return c.ID, nil
 }

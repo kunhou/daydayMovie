@@ -12,4 +12,8 @@ type MovieRepository interface {
 	TVStore(t *models.TV) (uint, error)
 	TVList(page, limit int, order map[string]string) ([]*models.TVIntro, *models.Page, error)
 	PeopleList(page, limit int, order map[string]string, search map[string]interface{}) ([]*models.Person, *models.Page, error)
+	PeopleInfoByIDs(pIDs []uint) ([]*models.PersonIntro, error)
+	PeopleIDByProviderID(pIDs uint) (uint, error)
+	CreditStore(c *models.Credit) (uint, error)
+	CreditIndex(castType string, castIDs *[]uint, peopleIDs *[]uint, department *string) ([]*models.Credit, error)
 }

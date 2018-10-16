@@ -43,17 +43,24 @@ func main() {
 	ch := pu.CreateBatchStoreMovieTask()
 	pch := pu.CreateBatchStorePersonTask()
 	tch := pu.CreateStoreTVTask()
+	cch := pu.CreateStoreCreditTask()
 
 	log.Info("Service Start")
 	gocron.ChangeLoc(_localZone)
 	go func() {
 		s := gocron.NewScheduler()
 		s.Every(1).Day().At("04:00").Do(func() {
-			log.Info("Start crawler")
+			log.Warning("Start crawler")
 			go func() {
+				defer func() {
+					if err := recover(); err != nil {
+						log.Error("cron panic!!! :", err)
+					}
+				}()
 				pu.StartCrawlerMovie(ch)
 				pu.StartCrawlerPerson(pch)
 				pu.StartCrawlerTV(tch)
+				pu.StartCrawlerCredit(cch)
 			}()
 		})
 		<-s.Start()

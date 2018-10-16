@@ -111,6 +111,17 @@ type Season struct {
 	UpdatedAt    time.Time `json:"updatedAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 }
 
+type Credit struct {
+	ID         uint   `gorm:"primary_key"`
+	PersonID   uint   `gorm:"not null;unique_index:idx_person_cast_type"`
+	CastID     uint   `gorm:"not null;unique_index:idx_person_cast_type"`
+	Cast       string `gorm:"type:varchar(255);not null;unique_index:idx_person_cast_type"`
+	Type       string `gorm:"type:varchar(255);not null;unique_index:idx_person_cast_type"`
+	Order      int
+	Character  string `gorm:"type:varchar(255)"`
+	Department string `gorm:"type:varchar(255)"`
+}
+
 func Migrate(rollback int) {
 	DB.LogMode(true)
 	m := gormigrate.New(DB, gormigrate.DefaultOptions, []*gormigrate.Migration{
@@ -164,9 +175,24 @@ func Migrate(rollback int) {
 				return nil
 			},
 		},
+		{
+			ID: "201810162330",
+			Migrate: func(tx *gorm.DB) error {
+				if err := tx.AutoMigrate(&Credit{}).Error; err != nil {
+					return err
+				}
+				if err := tx.Table("credits").AddForeignKey("person_id", "people(id)", "NO ACTION", "NO ACTION").Error; err != nil {
+					return err
+				}
+				return nil
+			},
+			Rollback: func(tx *gorm.DB) error {
+				return nil
+			},
+		},
 	})
 	m.InitSchema(func(tx *gorm.DB) error {
-		if err := tx.AutoMigrate(&Movie{}, &Person{}, &TV{}, &Season{}).Error; err != nil {
+		if err := tx.AutoMigrate(&Movie{}, &Person{}, &TV{}, &Season{}, &Credit{}).Error; err != nil {
 			return err
 		}
 		if err := tx.Table("movie_people").AddForeignKey("movie_id", "movies(id)", "CASCADE", "NO ACTION").
@@ -174,6 +200,9 @@ func Migrate(rollback int) {
 			return err
 		}
 		if err := tx.Model(&Season{}).AddForeignKey("tv_id", "tvs(id)", "CASCADE", "CASCADE").Error; err != nil {
+			return err
+		}
+		if err := tx.Table("credits").AddForeignKey("person_id", "people(id)", "NO ACTION", "NO ACTION").Error; err != nil {
 			return err
 		}
 		return nil

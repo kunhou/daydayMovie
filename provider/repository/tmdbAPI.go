@@ -28,6 +28,7 @@ var (
 	LATEST_TV_ID      = "/tv/latest"
 	GET_TV_DETAIL     = "/tv/%d"
 	GET_TV_SEASON     = "/tv/%d/season/%d"
+	GET_MOVIE_CREDITs = "/movie/%d/credits"
 )
 
 type tmdbRepository struct {
@@ -486,6 +487,58 @@ func (tmdb *tmdbRepository) GetTVSeasonVote(tvID uint, seasonID int) (voteAvg fl
 		voteAvg = math.Round(voteTotalPoint*100/float64(voteCount)) / float64(100)
 	}
 	return voteAvg, voteCount, nil
+}
+
+func (tmdb *tmdbRepository) GetMovieCredits(movieID uint) (casts []models.Credit, crews []models.Credit, err error) {
+	casts = []models.Credit{}
+	crews = []models.Credit{}
+	type body struct {
+		ID   int `json:"id"`
+		Cast []struct {
+			CastID      int    `json:"cast_id"`
+			Character   string `json:"character"`
+			CreditID    string `json:"credit_id"`
+			Gender      int    `json:"gender"`
+			ID          uint   `json:"id"`
+			Name        string `json:"name"`
+			Order       int    `json:"order"`
+			ProfilePath string `json:"profile_path"`
+		} `json:"cast"`
+		Crew []struct {
+			CreditID    string `json:"credit_id"`
+			Department  string `json:"department"`
+			Gender      int    `json:"gender"`
+			ID          uint   `json:"id"`
+			Job         string `json:"job"`
+			Name        string `json:"name"`
+			ProfilePath string `json:"profile_path"`
+		} `json:"crew"`
+	}
+	var data body
+	urlPath := fmt.Sprintf(GET_MOVIE_CREDITs, movieID)
+	if err := tmdb.request(urlPath, nil, &data); err != nil {
+		return casts, crews, err
+	}
+	for i := range data.Cast {
+		casts = append(casts, models.Credit{
+			ProviderPersonID: data.Cast[i].ID,
+			Order:            &data.Cast[i].Order,
+			Character:        &data.Cast[i].Character,
+			Type:             models.CreditTypeCast,
+			Cast:             models.CastMovie,
+			CastID:           movieID,
+		})
+	}
+	for i := range data.Crew {
+		crews = append(crews, models.Credit{
+			ProviderPersonID: data.Crew[i].ID,
+			Department:       &data.Crew[i].Department,
+			Type:             models.CreditTypeCrew,
+			Cast:             models.CastMovie,
+			CastID:           movieID,
+		})
+	}
+	return casts, crews, nil
 }
 
 var requestMutex sync.Mutex

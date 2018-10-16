@@ -4,6 +4,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jinzhu/gorm"
+
 	"github.com/kunhou/TMDB/log"
 	"github.com/kunhou/TMDB/models"
 	"github.com/kunhou/TMDB/movie"
@@ -179,4 +181,77 @@ func (tu *tmdbUsecase) CreateStoreTVTask() chan *models.TV {
 	})
 
 	return tvWriteChan
+}
+
+func (tu *tmdbUsecase) StartCrawlerCredit(ch chan *models.Credit) {
+	order := map[string]string{"id": "desc"}
+	p, totalPage := 1, 1
+	for {
+		movies, page, err := tu.movieRepo.MovieList(1, 100, order)
+		if err != nil {
+			log.WithError(err).Error("Crealer credit fail on get movies id")
+		}
+		if p == 1 {
+			totalPage = int(page.TotalPages)
+		}
+		for _, m := range movies {
+			casts, crews, err := tu.providerRepo.GetMovieCredits(m.ProviderID)
+			if err != nil {
+				log.WithError(err).WithField("movie", m).Error("get credits fail")
+			}
+			for i := range casts {
+				providerPersonID := casts[i].ProviderPersonID
+				id, err := tu.movieRepo.PeopleIDByProviderID(providerPersonID)
+				if err != nil {
+					if err == gorm.ErrRecordNotFound {
+						log.WithField("provider id", providerPersonID).Error("people not found")
+						continue
+					}
+					log.WithError(err).Error("find people id fail")
+					continue
+				}
+				casts[i].PersonID = id
+				ch <- &casts[i]
+			}
+			for i := range crews {
+				providerPersonID := crews[i].ProviderPersonID
+				id, err := tu.movieRepo.PeopleIDByProviderID(providerPersonID)
+				if err != nil {
+					if err == gorm.ErrRecordNotFound {
+						log.WithField("provider id", providerPersonID).Error("people not found")
+						continue
+					}
+					log.WithError(err).Error("find people id fail")
+					continue
+				}
+				crews[i].PersonID = id
+				ch <- &crews[i]
+			}
+		}
+
+		if p > totalPage {
+			break
+		}
+		p++
+	}
+	return
+}
+
+var creditWriteChan chan *models.Credit
+var creditWriteSyncOnce sync.Once
+
+func (tu *tmdbUsecase) CreateStoreCreditTask() chan *models.Credit {
+	creditWriteSyncOnce.Do(func() {
+		creditWriteChan = make(chan *models.Credit, 100000)
+		go func() {
+			for {
+				c := <-creditWriteChan
+				if _, err := tu.movieRepo.CreditStore(c); err != nil {
+					log.WithError(err).Error("credit Task store fail")
+				}
+			}
+		}()
+	})
+
+	return creditWriteChan
 }

@@ -31,3 +31,16 @@ type Person struct {
 func (Person) TableName() string {
 	return "people"
 }
+
+type PersonIntro struct {
+	ID          uint    `json:"-"`
+	ProviderID  uint    `json:"-" gorm:"column:provider_id;not null;unique_index:idx_provider_person"`
+	Name        string  `json:"name"`
+	Gender      uint8   `json:"gender"`
+	Order       *uint32 `json:"order,omitempty" gorm:"-"`
+	ProfilePath string  `json:"profilePath"`
+}
+
+func (PersonIntro) TableName() string {
+	return "people"
+}

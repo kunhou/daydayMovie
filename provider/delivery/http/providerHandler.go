@@ -26,6 +26,10 @@ func (ph *HttpProviderHandler) ManualCrawlerTask(c *gin.Context) {
 		log.Info("Manual crawler tv")
 		ch := ph.PUsecase.CreateStoreTVTask()
 		go ph.PUsecase.StartCrawlerTV(ch)
+	} else if strings.EqualFold(crawlerType, "credit") {
+		log.Info("Manual crawler credit")
+		ch := ph.PUsecase.CreateStoreCreditTask()
+		go ph.PUsecase.StartCrawlerCredit(ch)
 	}
 
 	return
