@@ -174,7 +174,7 @@ func (tu *tmdbUsecase) CreateStoreTVTask() chan *models.TV {
 			for {
 				tv := <-tvWriteChan
 				if _, err := tu.movieRepo.TVStore(tv); err != nil {
-					log.WithError(err).Error("tv Task store fail")
+					log.WithField("tv", tv).WithError(err).Error("tv Task store fail")
 				}
 			}
 		}()
