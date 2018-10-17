@@ -204,7 +204,7 @@ func (tu *tmdbUsecase) StartCrawlerCredit(ch chan *models.Credit) {
 				id, err := tu.movieRepo.PeopleIDByProviderID(providerPersonID)
 				if err != nil {
 					if err == gorm.ErrRecordNotFound {
-						log.WithField("provider id", providerPersonID).Error("people not found")
+						log.WithField("provider id", providerPersonID).Debug("people not found")
 						continue
 					}
 					log.WithError(err).Error("find people id fail")
@@ -218,7 +218,7 @@ func (tu *tmdbUsecase) StartCrawlerCredit(ch chan *models.Credit) {
 				id, err := tu.movieRepo.PeopleIDByProviderID(providerPersonID)
 				if err != nil {
 					if err == gorm.ErrRecordNotFound {
-						log.WithField("provider id", providerPersonID).Error("people not found")
+						log.WithField("provider id", providerPersonID).Debug("people not found")
 						continue
 					}
 					log.WithError(err).Error("find people id fail")
