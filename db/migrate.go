@@ -118,8 +118,10 @@ type Credit struct {
 	Cast       string `gorm:"type:varchar(255);not null;unique_index:idx_person_cast_type"`
 	Type       string `gorm:"type:varchar(255);not null;unique_index:idx_person_cast_type"`
 	Order      int
-	Character  string `gorm:"type:varchar(255)"`
-	Department string `gorm:"type:varchar(255)"`
+	Character  string    `gorm:"type:varchar(255)"`
+	Department string    `gorm:"type:varchar(255)"`
+	CreatedAt  time.Time `json:"createdAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
+	UpdatedAt  time.Time `json:"updatedAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 }
 
 func Migrate(rollback int) {
@@ -176,7 +178,7 @@ func Migrate(rollback int) {
 			},
 		},
 		{
-			ID: "201810162330",
+			ID: "201810182000",
 			Migrate: func(tx *gorm.DB) error {
 				if err := tx.AutoMigrate(&Credit{}).Error; err != nil {
 					return err

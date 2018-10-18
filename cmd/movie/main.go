@@ -60,7 +60,7 @@ func main() {
 				pu.StartCrawlerMovie(ch)
 				pu.StartCrawlerPerson(pch)
 				pu.StartCrawlerTV(tch)
-				pu.StartCrawlerCredit(cch)
+				pu.StartCrawlerCredit(cch, pch)
 			}()
 		})
 		<-s.Start()

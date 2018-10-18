@@ -9,6 +9,6 @@ type ProviderUsecase interface {
 	CreateBatchStorePersonTask() chan *models.Person
 	StartCrawlerTV(ch chan *models.TV)
 	CreateStoreTVTask() chan *models.TV
-	StartCrawlerCredit(ch chan *models.Credit)
+	StartCrawlerCredit(ch chan *models.Credit, pch chan *models.Person)
 	CreateStoreCreditTask() chan *models.Credit
 }

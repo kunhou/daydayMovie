@@ -29,7 +29,8 @@ func (ph *HttpProviderHandler) ManualCrawlerTask(c *gin.Context) {
 	} else if strings.EqualFold(crawlerType, "credit") {
 		log.Info("Manual crawler credit")
 		ch := ph.PUsecase.CreateStoreCreditTask()
-		go ph.PUsecase.StartCrawlerCredit(ch)
+		pch := ph.PUsecase.CreateBatchStorePersonTask()
+		go ph.PUsecase.StartCrawlerCredit(ch, pch)
 	}
 
 	return
