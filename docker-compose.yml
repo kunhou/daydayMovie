@@ -1,10 +1,32 @@
-version: '3'
+version: '3.3'
+
 services:
   ddmovie:
     image: patricelee/daydaymovie:last
     ports:
-      - "80:8080"
+      - "8080:8080"
     env_file: .env
     volumes:
       - ./data:/data
       - ./assets:/assets
+    restart: always
+  crawler:
+    build: 
+      labels:
+        com.centurylinklabs.watchtower.enable: "false"
+    image: patricelee/howing-crawler:last
+    ports:
+      - "8081:8080"
+    env_file: .env
+    volumes:
+      - ./data:/data
+      - ./assets:/assets
+    restart: always
+    
+  watchtower:
+    image: v2tec/watchtower
+    env_file: .env.watch
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /root/.docker/config.json:/config.json
+    command: --interval 300

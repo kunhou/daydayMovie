@@ -16,6 +16,10 @@ import (
 )
 
 func main() {
+	// _localZone, err := time.LoadLocation("Asia/Taipei")
+	// if err != nil {
+	// 	panic(err)
+	// }
 	// migration
 	log.Info("Migrate start")
 	var drop = flag.Bool("drop", false, "drop all tables")
@@ -33,7 +37,31 @@ func main() {
 	pu := providerUcase.NewTmdbUsecase(pr, mr, personr)
 	mu := movieUcase.NewMovieUsecase(mr)
 
+	// ch := pu.CreateBatchStoreMovieTask()
+	// pch := pu.CreateBatchStorePersonTask()
+	// tch := pu.CreateStoreTVTask()
+	// cch := pu.CreateStoreCreditTask()
+
 	log.Info("Service Start")
+	// gocron.ChangeLoc(_localZone)
+	// go func() {
+	// 	s := gocron.NewScheduler()
+	// 	s.Every(1).Day().At("04:00").Do(func() {
+	// 		log.Warning("Start crawler")
+	// 		go func() {
+	// 			defer func() {
+	// 				if err := recover(); err != nil {
+	// 					log.Error("cron panic!!! :", err)
+	// 				}
+	// 			}()
+	// 			pu.StartCrawlerMovie(ch)
+	// 			pu.StartCrawlerPerson(pch)
+	// 			pu.StartCrawlerTV(tch)
+	// 			pu.StartCrawlerCredit(cch, pch)
+	// 		}()
+	// 	})
+	// 	<-s.Start()
+	// }()
 	router.Setting(pu, mu).Run()
 	log.Info("Service Stop")
 }
