@@ -12,6 +12,7 @@ services:
     restart: always
   crawler:
     build: 
+      context: .
       labels:
         com.centurylinklabs.watchtower.enable: "false"
     image: patricelee/howing-crawler:last
