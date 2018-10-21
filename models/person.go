@@ -33,7 +33,7 @@ func (Person) TableName() string {
 }
 
 type PersonIntro struct {
-	ID          uint    `json:"-"`
+	ID          uint    `json:"id"`
 	ProviderID  uint    `json:"-" gorm:"column:provider_id;not null;unique_index:idx_provider_person"`
 	Name        string  `json:"name"`
 	Gender      uint8   `json:"gender"`

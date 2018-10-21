@@ -232,7 +232,7 @@ func (p *pgsqlRepository) PeopleList(page, limit int, order map[string]string, s
 func (p *pgsqlRepository) PeopleInfoByIDs(pIDs []uint) ([]*models.PersonIntro, error) {
 	db := p.Conn
 	peopleIntros := []*models.PersonIntro{}
-	if err := db.Where("provider_id IN (?)", pIDs).Find(&peopleIntros).Error; err != nil && err != gorm.ErrRecordNotFound {
+	if err := db.Where("id IN (?)", pIDs).Find(&peopleIntros).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return peopleIntros, err
 	}
 	return peopleIntros, nil
@@ -250,15 +250,23 @@ func (p *pgsqlRepository) PeopleIDByProviderID(pID uint) (uint, error) {
 func (p *pgsqlRepository) CreditIndex(castType string, castIDs *[]uint, peopleIDs *[]uint, department *string) ([]*models.Credit, error) {
 	db := p.Conn
 	credits := []*models.Credit{}
-	db = db.Where("cast", castType)
+	db = db.Where("\"cast\" = ?", castType)
 	if castIDs != nil {
-		db = db.Where("cast_id IN (?)", castIDs)
+		ids := []int{}
+		for _, i := range *castIDs {
+			ids = append(ids, int(i))
+		}
+		db = db.Where("cast_id IN (?)", ids)
 	}
 	if peopleIDs != nil {
-		db = db.Where("person_id IN (?)", peopleIDs)
+		ids := []int{}
+		for _, i := range *peopleIDs {
+			ids = append(ids, int(i))
+		}
+		db = db.Where("person_id IN (?)", ids)
 	}
 	if department != nil {
-		db = db.Where("department", department)
+		db = db.Where("department = ?", department)
 	}
 	if err := db.Find(&credits).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return credits, err
