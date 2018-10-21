@@ -264,6 +264,85 @@ func (tu *tmdbUsecase) StartCrawlerCredit(ch chan *models.Credit, pch chan *mode
 	return
 }
 
+func (tu *tmdbUsecase) StartCrawlerPopularMovie(ch chan *models.Credit, pch chan *models.Person, mch chan *models.Movie) {
+	total, err := tu.providerRepo.GetMovieTotalPages()
+	if err != nil {
+		log.WithError(err).Error("get total page fail")
+		return
+	}
+	opt := map[string]string{}
+	opt["sort_by"] = "popularity.desc"
+	for i := 1; i <= total; i++ {
+		movies, err := tu.providerRepo.GetMovieWithPage(i, opt)
+		if err != nil {
+			log.WithField("page", i).WithError(err).Error("get movies by page fail")
+			continue
+		}
+		for _, m := range movies {
+			mch <- m
+			casts, crews, err := tu.providerRepo.GetMovieCredits(m.ProviderID)
+			if err != nil {
+				log.WithError(err).WithField("movie", m).Error("get credits fail")
+			}
+			for i := range casts {
+				if casts[i].Order != nil && *casts[i].Order > 5 {
+					continue
+				}
+				providerPersonID := casts[i].ProviderPersonID
+				id, err := tu.movieRepo.PeopleIDByProviderID(providerPersonID)
+				if err != nil {
+					logfield := log.Fields{
+						"provider People ID": providerPersonID,
+						"provider movie ID":  m.ProviderID,
+					}
+					if err != gorm.ErrRecordNotFound {
+						log.WithFields(logfield).WithError(err).Error("find people id from db fail")
+						continue
+					}
+					p, err := tu.providerRepo.GetPersonDetail(int(providerPersonID))
+					if err != nil {
+						log.WithError(err).WithFields(logfield).Error("get people from provider fail")
+						continue
+					}
+					id, err = tu.personRepo.Store(p)
+					if err != nil {
+						log.WithError(err).WithFields(logfield).Error("store people fail")
+						continue
+					}
+				}
+				casts[i].PersonID = id
+				ch <- &casts[i]
+			}
+			for i := range crews {
+				providerPersonID := crews[i].ProviderPersonID
+				id, err := tu.movieRepo.PeopleIDByProviderID(providerPersonID)
+				if err != nil {
+					logfield := log.Fields{
+						"provider People ID": providerPersonID,
+						"provider movie ID":  m.ProviderID,
+					}
+					if err != gorm.ErrRecordNotFound {
+						log.WithFields(logfield).WithError(err).Error("find people id from db fail")
+						continue
+					}
+					p, err := tu.providerRepo.GetPersonDetail(int(providerPersonID))
+					if err != nil {
+						log.WithError(err).WithFields(logfield).Error("get people from provider fail")
+						continue
+					}
+					id, err = tu.personRepo.Store(p)
+					if err != nil {
+						log.WithError(err).WithFields(logfield).Error("store people fail")
+						continue
+					}
+				}
+				crews[i].PersonID = id
+				ch <- &crews[i]
+			}
+		}
+	}
+}
+
 var creditWriteChan chan *models.Credit
 var creditWriteSyncOnce sync.Once
 

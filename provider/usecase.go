@@ -11,4 +11,5 @@ type ProviderUsecase interface {
 	CreateStoreTVTask() chan *models.TV
 	StartCrawlerCredit(ch chan *models.Credit, pch chan *models.Person)
 	CreateStoreCreditTask() chan *models.Credit
+	StartCrawlerPopularMovie(ch chan *models.Credit, pch chan *models.Person, mch chan *models.Movie)
 }

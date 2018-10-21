@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"path"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -125,7 +126,7 @@ func (tmdb *tmdbRepository) GetMovieDetail(id int) (*models.Movie, error) {
 	}, nil
 }
 
-func (tmdb *tmdbRepository) GetMovieWithPage(page int) ([]*models.Movie, error) {
+func (tmdb *tmdbRepository) GetMovieWithPage(page int, options map[string]string) ([]*models.Movie, error) {
 	type responseBody struct {
 		Page         int `json:"page"`
 		TotalResults int `json:"total_results"`
@@ -151,7 +152,7 @@ func (tmdb *tmdbRepository) GetMovieWithPage(page int) ([]*models.Movie, error) 
 		page = 1
 	}
 	var data responseBody
-	var options = make(map[string]string)
+	// var options = make(map[string]string)
 	var movies []*models.Movie
 	options["page"] = strconv.Itoa(page)
 	if err := tmdb.request(DISCOVER_PATH, options, &data); err != nil {
@@ -530,6 +531,9 @@ func (tmdb *tmdbRepository) GetMovieCredits(movieID uint) (casts []models.Credit
 		})
 	}
 	for i := range data.Crew {
+		if !strings.EqualFold(data.Crew[i].Job, models.JobDirecting) {
+			continue
+		}
 		crews = append(crews, models.Credit{
 			ProviderPersonID: data.Crew[i].ID,
 			Department:       &data.Crew[i].Department,

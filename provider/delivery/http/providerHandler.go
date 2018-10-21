@@ -31,6 +31,12 @@ func (ph *HttpProviderHandler) ManualCrawlerTask(c *gin.Context) {
 		ch := ph.PUsecase.CreateStoreCreditTask()
 		pch := ph.PUsecase.CreateBatchStorePersonTask()
 		go ph.PUsecase.StartCrawlerCredit(ch, pch)
+	} else if strings.EqualFold(crawlerType, "popular") {
+		log.Info("Manual crawler popular movie")
+		ch := ph.PUsecase.CreateStoreCreditTask()
+		pch := ph.PUsecase.CreateBatchStorePersonTask()
+		mch := ph.PUsecase.CreateBatchStoreMovieTask()
+		go ph.PUsecase.StartCrawlerPopularMovie(ch, pch, mch)
 	}
 
 	return

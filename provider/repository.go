@@ -7,7 +7,7 @@ import (
 )
 
 type ProviderRepository interface {
-	GetMovieWithPage(page int) ([]*models.Movie, error)
+	GetMovieWithPage(page int, options map[string]string) ([]*models.Movie, error)
 	GetMovieTotalPages() (int, error)
 	GetMovieLastID() (int, error)
 	GetMovieDetail(id int) (*models.Movie, error)
