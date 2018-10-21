@@ -38,8 +38,8 @@ func (m *MovieUsecase) MovieList(page, limit int, order map[string]string) ([]*m
 		movieIDs = append(movieIDs, m.ProviderID)
 		movieIntros[i].Directing = []models.PersonIntro{}
 	}
-	depType := models.DepartmentDirecting
-	credits, err := m.movieRepos.CreditIndex(models.CastMovie, &movieIDs, nil, &depType)
+	jobType := models.JobDirecting
+	credits, err := m.movieRepos.CreditIndex(models.CastMovie, &movieIDs, nil, &jobType)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "get credit index")
 	}

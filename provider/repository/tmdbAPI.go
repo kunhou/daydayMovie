@@ -536,6 +536,7 @@ func (tmdb *tmdbRepository) GetMovieCredits(movieID uint) (casts []models.Credit
 			Type:             models.CreditTypeCrew,
 			Cast:             models.CastMovie,
 			CastID:           movieID,
+			Job:              &data.Crew[i].Job,
 		})
 	}
 	return casts, crews, nil

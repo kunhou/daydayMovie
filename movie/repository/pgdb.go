@@ -247,7 +247,7 @@ func (p *pgsqlRepository) PeopleIDByProviderID(pID uint) (uint, error) {
 	return peopleIntro.ID, nil
 }
 
-func (p *pgsqlRepository) CreditIndex(castType string, castIDs *[]uint, peopleIDs *[]uint, department *string) ([]*models.Credit, error) {
+func (p *pgsqlRepository) CreditIndex(castType string, castIDs *[]uint, peopleIDs *[]uint, job *string) ([]*models.Credit, error) {
 	db := p.Conn
 	credits := []*models.Credit{}
 	db = db.Where("\"cast\" = ?", castType)
@@ -265,8 +265,8 @@ func (p *pgsqlRepository) CreditIndex(castType string, castIDs *[]uint, peopleID
 		}
 		db = db.Where("person_id IN (?)", ids)
 	}
-	if department != nil {
-		db = db.Where("department = ?", department)
+	if job != nil {
+		db = db.Where("job = ?", job)
 	}
 	if err := db.Find(&credits).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return credits, err
@@ -279,6 +279,7 @@ func (p *pgsqlRepository) CreditStore(c *models.Credit) (uint, error) {
 		Assign(models.Credit{
 			Order:      c.Order,
 			Department: c.Department,
+			Job:        c.Job,
 		}).FirstOrCreate(&c).Error; err != nil {
 		return 0, errors.Wrap(err, "Store credit Fail")
 	}

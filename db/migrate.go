@@ -120,6 +120,7 @@ type Credit struct {
 	Order      int
 	Character  string    `gorm:"type:varchar(255)"`
 	Department string    `gorm:"type:varchar(255)"`
+	Job        string    `gorm:"type:varchar(255)"`
 	CreatedAt  time.Time `json:"createdAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 	UpdatedAt  time.Time `json:"updatedAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 }
@@ -184,6 +185,18 @@ func Migrate(rollback int) {
 					return err
 				}
 				if err := tx.Table("credits").AddForeignKey("person_id", "people(id)", "NO ACTION", "NO ACTION").Error; err != nil {
+					return err
+				}
+				return nil
+			},
+			Rollback: func(tx *gorm.DB) error {
+				return nil
+			},
+		},
+		{
+			ID: "201810211100",
+			Migrate: func(tx *gorm.DB) error {
+				if err := tx.AutoMigrate(&Credit{}).Error; err != nil {
 					return err
 				}
 				return nil
