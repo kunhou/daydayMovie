@@ -23,11 +23,3 @@ services:
       - ./data:/data
       - ./assets:/assets
     restart: always
-    
-  watchtower:
-    image: v2tec/watchtower
-    env_file: .env.watch
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /root/.docker/config.json:/config.json
-    command: --interval 300
