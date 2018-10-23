@@ -272,7 +272,11 @@ func (tu *tmdbUsecase) StartCrawlerPopularMovie(ch chan *models.Credit, pch chan
 	}
 	opt := map[string]string{}
 	opt["sort_by"] = "popularity.desc"
+	log.Info("start crawler Popular Movie")
 	for i := 1; i <= total; i++ {
+		if i > 1000 {
+			break
+		}
 		movies, err := tu.providerRepo.GetMovieWithPage(i, opt)
 		if err != nil {
 			log.WithField("page", i).WithError(err).Error("get movies by page fail")
@@ -341,6 +345,107 @@ func (tu *tmdbUsecase) StartCrawlerPopularMovie(ch chan *models.Credit, pch chan
 			}
 		}
 	}
+	log.Info("end crawler Popular Movie")
+}
+
+func (tu *tmdbUsecase) StartCrawlerPopularTV(ch chan *models.Credit, pch chan *models.Person, tvch chan *models.TV) {
+	total, err := tu.providerRepo.GetTVTotalPages()
+	if err != nil {
+		log.WithError(err).Error("get total page fail")
+		return
+	}
+	opt := map[string]string{}
+	opt["sort_by"] = "popularity.desc"
+	log.Info("start crawler Popular TV")
+	for i := 1; i <= total; i++ {
+		if i > 1000 {
+			break
+		}
+		tvData, err := tu.providerRepo.GetTVWithPage(i, opt)
+		if err != nil {
+			log.WithField("page", i).WithError(err).Error("get tvData by page fail")
+			continue
+		}
+		for _, tv := range tvData {
+			tvDetail, err := tu.providerRepo.GetTVDetail(int(tv.ProviderID))
+			if err != nil {
+				if _, ok := err.(provider.APINotFoundError); !ok {
+					log.WithError(err).Error("Get discover Fail")
+				}
+				continue
+			}
+			for i, _ := range tvDetail.Seasons {
+				avg, count, err := tu.providerRepo.GetTVSeasonVote(tv.ProviderID, tvDetail.Seasons[i].SeasonNumber)
+				if err != nil {
+					log.WithError(err).Error("get tv season vote fail")
+					continue
+				}
+				tvDetail.Seasons[i].VoteAverage = avg
+				tvDetail.Seasons[i].VoteCount = count
+			}
+			tvch <- tvDetail
+			casts, crews, err := tu.providerRepo.GetTVCredits(tvDetail.ProviderID)
+			if err != nil {
+				log.WithError(err).WithField("tv", tvDetail).Error("get tv credits fail")
+			}
+			for i := range casts {
+				if casts[i].Order != nil && *casts[i].Order > 5 {
+					continue
+				}
+				providerPersonID := casts[i].ProviderPersonID
+				id, err := tu.movieRepo.PeopleIDByProviderID(providerPersonID)
+				if err != nil {
+					logfield := log.Fields{
+						"provider People ID": providerPersonID,
+						"provider tv ID":     tvDetail.ProviderID,
+					}
+					if err != gorm.ErrRecordNotFound {
+						log.WithFields(logfield).WithError(err).Error("find people id from db fail")
+						continue
+					}
+					p, err := tu.providerRepo.GetPersonDetail(int(providerPersonID))
+					if err != nil {
+						log.WithError(err).WithFields(logfield).Error("get people from provider fail")
+						continue
+					}
+					id, err = tu.personRepo.Store(p)
+					if err != nil {
+						log.WithError(err).WithFields(logfield).Error("store people fail")
+						continue
+					}
+				}
+				casts[i].PersonID = id
+				ch <- &casts[i]
+			}
+			for i := range crews {
+				providerPersonID := crews[i].ProviderPersonID
+				id, err := tu.movieRepo.PeopleIDByProviderID(providerPersonID)
+				if err != nil {
+					logfield := log.Fields{
+						"provider People ID": providerPersonID,
+						"provider tv ID":     tvDetail.ProviderID,
+					}
+					if err != gorm.ErrRecordNotFound {
+						log.WithFields(logfield).WithError(err).Error("find people id from db fail")
+						continue
+					}
+					p, err := tu.providerRepo.GetPersonDetail(int(providerPersonID))
+					if err != nil {
+						log.WithError(err).WithFields(logfield).Error("get people from provider fail")
+						continue
+					}
+					id, err = tu.personRepo.Store(p)
+					if err != nil {
+						log.WithError(err).WithFields(logfield).Error("store people fail")
+						continue
+					}
+				}
+				crews[i].PersonID = id
+				ch <- &crews[i]
+			}
+		}
+	}
+	log.Info("end crawler Popular TV")
 }
 
 var creditWriteChan chan *models.Credit

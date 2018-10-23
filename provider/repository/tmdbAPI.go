@@ -20,16 +20,18 @@ import (
 )
 
 var (
-	apiURL            = "https://api.themoviedb.org/3/"
-	DISCOVER_PATH     = "/discover/movie"
-	LATEST_MOVIE_ID   = "/movie/latest"
-	GET_MOVIE_DETAIL  = "/movie/%d"
-	LATEST_PERSON_ID  = "/person/latest"
-	GET_PERSON_DETAIL = "/person/%d"
-	LATEST_TV_ID      = "/tv/latest"
-	GET_TV_DETAIL     = "/tv/%d"
-	GET_TV_SEASON     = "/tv/%d/season/%d"
-	GET_MOVIE_CREDITs = "/movie/%d/credits"
+	apiURL              = "https://api.themoviedb.org/3/"
+	DISCOVER_MOVIE_PATH = "/discover/movie"
+	DISCOVER_TV_PATH    = "/discover/tv"
+	LATEST_MOVIE_ID     = "/movie/latest"
+	GET_MOVIE_DETAIL    = "/movie/%d"
+	LATEST_PERSON_ID    = "/person/latest"
+	GET_PERSON_DETAIL   = "/person/%d"
+	LATEST_TV_ID        = "/tv/latest"
+	GET_TV_DETAIL       = "/tv/%d"
+	GET_TV_SEASON       = "/tv/%d/season/%d"
+	GET_MOVIE_CREDITS   = "/movie/%d/credits"
+	GET_TV_CREDITS      = "/tv/%d/credits"
 )
 
 type tmdbRepository struct {
@@ -49,7 +51,22 @@ func (tmdb *tmdbRepository) GetMovieTotalPages() (int, error) {
 	var data responseBody
 	var options = make(map[string]string)
 	options["page"] = "1"
-	if err := tmdb.request(DISCOVER_PATH, options, &data); err != nil {
+	if err := tmdb.request(DISCOVER_MOVIE_PATH, options, &data); err != nil {
+		return 0, err
+	}
+	return data.TotalPages, nil
+}
+
+func (tmdb *tmdbRepository) GetTVTotalPages() (int, error) {
+	type responseBody struct {
+		Page         int `json:"page"`
+		TotalResults int `json:"total_results"`
+		TotalPages   int `json:"total_pages"`
+	}
+	var data responseBody
+	var options = make(map[string]string)
+	options["page"] = "1"
+	if err := tmdb.request(DISCOVER_MOVIE_PATH, options, &data); err != nil {
 		return 0, err
 	}
 	return data.TotalPages, nil
@@ -79,7 +96,7 @@ func (tmdb *tmdbRepository) GetMovieDetail(id int) (*models.Movie, error) {
 		OriginalTitle    string  `json:"original_title"`
 		GenreIds         []struct {
 			ID   int64  `json:"id"`
-			Name string `json:"name`
+			Name string `json:"name"`
 		} `json:"genres"`
 		BackdropPath string `json:"backdrop_path"`
 		Adult        bool   `json:"adult"`
@@ -155,7 +172,7 @@ func (tmdb *tmdbRepository) GetMovieWithPage(page int, options map[string]string
 	// var options = make(map[string]string)
 	var movies []*models.Movie
 	options["page"] = strconv.Itoa(page)
-	if err := tmdb.request(DISCOVER_PATH, options, &data); err != nil {
+	if err := tmdb.request(DISCOVER_MOVIE_PATH, options, &data); err != nil {
 		return movies, err
 	}
 	for _, movie := range data.Results {
@@ -516,7 +533,7 @@ func (tmdb *tmdbRepository) GetMovieCredits(movieID uint) (casts []models.Credit
 		} `json:"crew"`
 	}
 	var data body
-	urlPath := fmt.Sprintf(GET_MOVIE_CREDITs, movieID)
+	urlPath := fmt.Sprintf(GET_MOVIE_CREDITS, movieID)
 	if err := tmdb.request(urlPath, nil, &data); err != nil {
 		return casts, crews, err
 	}
@@ -540,6 +557,124 @@ func (tmdb *tmdbRepository) GetMovieCredits(movieID uint) (casts []models.Credit
 			Type:             models.CreditTypeCrew,
 			Cast:             models.CastMovie,
 			CastID:           movieID,
+			Job:              &data.Crew[i].Job,
+		})
+	}
+	return casts, crews, nil
+}
+
+func (tmdb *tmdbRepository) GetTVWithPage(page int, options map[string]string) ([]*models.TV, error) {
+	type responseBody struct {
+		Page         int `json:"page"`
+		TotalResults int `json:"total_results"`
+		TotalPages   int `json:"total_pages"`
+		Results      []struct {
+			OriginalName     string   `json:"original_name"`
+			GenreIds         []int64  `json:"genre_ids"`
+			Name             string   `json:"name"`
+			Popularity       float64  `json:"popularity"`
+			OriginCountry    []string `json:"origin_country"`
+			VoteCount        int      `json:"vote_count"`
+			FirstAirDate     string   `json:"first_air_date"`
+			BackdropPath     string   `json:"backdrop_path"`
+			OriginalLanguage string   `json:"original_language"`
+			ID               uint     `json:"id"`
+			VoteAverage      float64  `json:"vote_average"`
+			Overview         string   `json:"overview"`
+			PosterPath       string   `json:"poster_path"`
+		} `json:"results"`
+	}
+	if page < 1 {
+		page = 1
+	}
+	var data responseBody
+	// var options = make(map[string]string)
+	var tvData []*models.TV
+	options["page"] = strconv.Itoa(page)
+	if err := tmdb.request(DISCOVER_TV_PATH, options, &data); err != nil {
+		return tvData, err
+	}
+	for _, tv := range data.Results {
+		var faTime *time.Time
+		faTime = nil
+		if len(tv.FirstAirDate) > 0 {
+			t, err := time.Parse("2006-01-02", tv.FirstAirDate)
+			if err != nil {
+				log.WithError(err).Error("Parse time error : " + tv.FirstAirDate)
+			} else {
+				faTime = &t
+			}
+		}
+		tvData = append(tvData, &models.TV{
+			Provider:         "tmdb",
+			Name:             tv.Name,
+			ProviderID:       tv.ID,
+			OriginalName:     tv.OriginalName,
+			GenreIds:         tv.GenreIds,
+			FirstAirDate:     faTime,
+			Popularity:       tv.Popularity,
+			OriginCountry:    tv.OriginCountry,
+			VoteCount:        tv.VoteCount,
+			BackdropPath:     tv.BackdropPath,
+			OriginalLanguage: tv.OriginalLanguage,
+			VoteAverage:      tv.VoteAverage,
+			Overview:         tv.Overview,
+			PosterPath:       tv.PosterPath,
+		})
+	}
+	return tvData, nil
+}
+
+func (tmdb *tmdbRepository) GetTVCredits(tvID uint) (casts []models.Credit, crews []models.Credit, err error) {
+	casts = []models.Credit{}
+	crews = []models.Credit{}
+	type body struct {
+		ID   int `json:"id"`
+		Cast []struct {
+			Character   string `json:"character"`
+			CreditID    string `json:"credit_id"`
+			ID          uint   `json:"id"`
+			Name        string `json:"name"`
+			Gender      int    `json:"gender"`
+			ProfilePath string `json:"profile_path"`
+			Order       int    `json:"order"`
+		} `json:"cast"`
+		Crew []struct {
+			CreditID    string `json:"credit_id"`
+			Department  string `json:"department"`
+			Gender      int    `json:"gender"`
+			ID          uint   `json:"id"`
+			Job         string `json:"job"`
+			Name        string `json:"name"`
+			ProfilePath string `json:"profile_path"`
+		} `json:"crew"`
+	}
+
+	var data body
+	urlPath := fmt.Sprintf(GET_TV_CREDITS, tvID)
+	if err := tmdb.request(urlPath, nil, &data); err != nil {
+		return casts, crews, err
+	}
+	for i := range data.Cast {
+		casts = append(casts, models.Credit{
+			ProviderPersonID: data.Cast[i].ID,
+			Order:            &data.Cast[i].Order,
+			Character:        &data.Cast[i].Character,
+			Type:             models.CreditTypeCast,
+			Cast:             models.CastTV,
+			CastID:           tvID,
+		})
+	}
+	for i := range data.Crew {
+		if !strings.EqualFold(data.Crew[i].Job, models.JobDirecting) {
+			continue
+		}
+		crews = append(crews, models.Credit{
+			ProviderPersonID: data.Crew[i].ID,
+			Department:       &data.Crew[i].Department,
+			Type:             models.CreditTypeCrew,
+			Cast:             models.CastTV,
+			CastID:           tvID,
 			Job:              &data.Crew[i].Job,
 		})
 	}

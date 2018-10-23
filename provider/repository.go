@@ -17,6 +17,9 @@ type ProviderRepository interface {
 	GetTVDetail(id int) (*models.TV, error)
 	GetTVSeasonVote(tvID uint, seasonID int) (voteAvg float64, voteCount int, err error)
 	GetMovieCredits(movieID uint) (casts []models.Credit, crews []models.Credit, err error)
+	GetTVTotalPages() (int, error)
+	GetTVWithPage(page int, options map[string]string) ([]*models.TV, error)
+	GetTVCredits(tvID uint) (casts []models.Credit, crews []models.Credit, err error)
 }
 type APINotFoundError struct {
 	Path string
