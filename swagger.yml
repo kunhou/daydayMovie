@@ -73,6 +73,8 @@ definitions:
         example: "索尼影業在與漫威影業合作了全新的《蜘蛛人：返校日..."
       directing:
         $ref: '#/definitions/Directing'
+      cast:
+        $ref: '#/definitions/Cast'
   Directing:
     type: array
     description: 導演
@@ -95,6 +97,32 @@ definitions:
           type: string
           description: 人物照片
           example: "/5BrXeKb0XxT0g20F35ndC05ztbZ.jpg"
+  Cast:
+    type: array
+    description: 演員
+    items:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: the id of person
+          example: 2269
+        name:
+          type: string
+          description: 名字
+          example: "Riz Ahmed"
+        gender:
+          type: integer
+          description: 性別 (0 - Not specified, 1 - Female, 2 - Male)
+          example: 2
+        profilePath:
+          type: string
+          description: 人物照片
+          example: "/yWjuIP634unLBCB4XjSgmJs5QGC.jpg"
+        order:
+          type: integer
+          description: 主演順序
+          example: 0
         
 paths:
   '/movies':

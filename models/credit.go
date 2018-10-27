@@ -17,7 +17,7 @@ type Credit struct {
 	CastID           uint   `gorm:"not null;unique_index:idx_person_cast_type"`
 	Cast             string `gorm:"type:varchar(255);not null;unique_index:idx_person_cast_type"`
 	Type             string `gorm:"type:varchar(255);not null;unique_index:idx_person_cast_type"`
-	Order            *int
+	Order            *uint32
 	Character        *string   `gorm:"type:varchar(255)"`
 	Department       *string   `gorm:"type:varchar(255)"`
 	Job              *string   `gorm:"type:varchar(255)"`

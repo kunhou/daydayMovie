@@ -39,6 +39,7 @@ type MovieIntro struct {
 	VoteCount     int           `json:"vote_count"`
 	Overview      string        `json:"overview" gorm:"type:text;not null"`
 	Directing     []PersonIntro `json:"directing" gorm:"-"`
+	Cast          []PersonIntro `json:"cast" gorm:"-"`
 }
 
 func (MovieIntro) TableName() string {

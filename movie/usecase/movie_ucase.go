@@ -37,29 +37,62 @@ func (m *MovieUsecase) MovieList(page, limit int, order map[string]string) ([]*m
 		movieMap[m.ProviderID] = movieIntros[i]
 		movieIDs = append(movieIDs, m.ProviderID)
 		movieIntros[i].Directing = []models.PersonIntro{}
+		movieIntros[i].Cast = []models.PersonIntro{}
 	}
 	jobType := models.JobDirecting
-	credits, err := m.movieRepos.CreditIndex(models.CastMovie, &movieIDs, nil, &jobType)
+	directCredits, err := m.movieRepos.CreditIndex(models.CastMovie, &movieIDs, nil, &jobType)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "get credit index")
+		return nil, nil, errors.Wrap(err, "get directing credit index")
 	}
-	peopleIDs := []uint{}
-	pMap := map[uint]*models.MovieIntro{}
-	for _, c := range credits {
-		pMap[c.PersonID] = movieMap[c.CastID]
-		peopleIDs = append(peopleIDs, c.PersonID)
+	dirPeopleIDs := []uint{}
+	dirMap := map[uint]*models.MovieIntro{}
+	for _, c := range directCredits {
+		dirMap[c.PersonID] = movieMap[c.CastID]
+		dirPeopleIDs = append(dirPeopleIDs, c.PersonID)
 	}
-	people, err := m.movieRepos.PeopleInfoByIDs(peopleIDs)
+	dirPeople, err := m.movieRepos.PeopleInfoByIDs(dirPeopleIDs)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "get people intro")
 	}
-	for i, p := range people {
-		m, ok := pMap[p.ID]
+	for i, p := range dirPeople {
+		m, ok := dirMap[p.ID]
 		if !ok {
 			log.Error("not found")
 			continue
 		}
-		m.Directing = append(m.Directing, *people[i])
+		m.Directing = append(m.Directing, *dirPeople[i])
+	}
+
+	castType := models.CreditTypeCast
+	castCredits, err := m.movieRepos.CreditIndex(models.CastMovie, &movieIDs, nil, &castType)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "get cast credit index")
+	}
+	castPeopleIDs := []uint{}
+	type castMovie struct {
+		intro *models.MovieIntro
+		order *uint32
+	}
+	castMap := map[uint]castMovie{}
+	for _, c := range castCredits {
+		castMap[c.PersonID] = castMovie{
+			intro: movieMap[c.CastID],
+			order: c.Order,
+		}
+		castPeopleIDs = append(castPeopleIDs, c.PersonID)
+	}
+	castPeople, err := m.movieRepos.PeopleInfoByIDs(castPeopleIDs)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "get cast people intro")
+	}
+	for i, p := range castPeople {
+		m, ok := castMap[p.ID]
+		if !ok {
+			log.Error("not found")
+			continue
+		}
+		castPeople[i].Order = m.order
+		m.intro.Cast = append(m.intro.Cast, *castPeople[i])
 	}
 	return movieIntros, pageInfo, nil
 }

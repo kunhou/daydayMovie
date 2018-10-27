@@ -519,7 +519,7 @@ func (tmdb *tmdbRepository) GetMovieCredits(movieID uint) (casts []models.Credit
 			Gender      int    `json:"gender"`
 			ID          uint   `json:"id"`
 			Name        string `json:"name"`
-			Order       int    `json:"order"`
+			Order       uint32 `json:"order"`
 			ProfilePath string `json:"profile_path"`
 		} `json:"cast"`
 		Crew []struct {
@@ -637,7 +637,7 @@ func (tmdb *tmdbRepository) GetTVCredits(tvID uint) (casts []models.Credit, crew
 			Name        string `json:"name"`
 			Gender      int    `json:"gender"`
 			ProfilePath string `json:"profile_path"`
-			Order       int    `json:"order"`
+			Order       uint32 `json:"order"`
 		} `json:"cast"`
 		Crew []struct {
 			CreditID    string `json:"credit_id"`

@@ -266,7 +266,11 @@ func (p *pgsqlRepository) CreditIndex(castType string, castIDs *[]uint, peopleID
 		db = db.Where("person_id IN (?)", ids)
 	}
 	if job != nil {
-		db = db.Where("job = ?", job)
+		if strings.EqualFold(*job, models.CreditTypeCast) {
+			db = db.Where("type = ?", job).Order("\"order\" ASC")
+		} else {
+			db = db.Where("job = ?", job)
+		}
 	}
 	if err := db.Find(&credits).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return credits, err
