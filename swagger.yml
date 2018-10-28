@@ -16,6 +16,8 @@ basePath: /api/v1/
 tags:
 - name: "Movie"
   description: "Everything about Movies"
+- name: "Genre"
+  description: "影片類型"
 schemes:
 - "https"
 definitions:
@@ -233,9 +235,36 @@ paths:
       parameters:
         - $ref: '#/parameters/movieID'
       tags: 
-          - Movie
+        - Movie
       responses:
         '200':
           description: 'Successful operation, return movie list'
           schema:
             $ref: '#/definitions/MovieDetail'
+  '/genre/movie/list':
+    get:
+      tags: 
+        - Genre
+      description: "電影類型列表"
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["犯罪","紀錄"]
+  '/genre/tv/list':
+    get:
+      tags: 
+        - Genre
+      description: "電視劇類型列表"
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["犯罪","紀錄"]
+              

@@ -104,7 +104,7 @@ func (m *MovieUsecase) MovieDetail(id uint) (*models.Movie, error) {
 	}
 	movie.Genres = []string{}
 	for _, id := range movie.GenreIds {
-		movie.Genres = append(movie.Genres, models.Genres[id])
+		movie.Genres = append(movie.Genres, models.MovieGenres[id])
 	}
 	jobType := models.JobDirecting
 	movieIDs := []uint{movie.ProviderID}

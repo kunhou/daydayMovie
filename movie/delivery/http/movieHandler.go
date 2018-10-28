@@ -37,6 +37,22 @@ func NewMovieHttpHandler(mu movie.MovieUsecase) *HttpMovieHandler {
 	return handler
 }
 
+func (ph *HttpMovieHandler) GenresList(c *gin.Context) {
+	gType := c.Param("type")
+	results := []string{}
+	if strings.EqualFold(gType, "movie") {
+		for _, name := range models.MovieGenres {
+			results = append(results, name)
+		}
+	} else if strings.EqualFold(gType, "tv") {
+		for _, name := range models.TVGenres {
+			results = append(results, name)
+		}
+	}
+	c.JSON(http.StatusOK, results)
+	return
+}
+
 func (ph *HttpMovieHandler) MovieList(c *gin.Context) {
 	var page, limit int
 	orderBy := make(map[string]string)

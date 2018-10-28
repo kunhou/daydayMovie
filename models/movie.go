@@ -6,7 +6,7 @@ import (
 	"github.com/lib/pq"
 )
 
-var Genres = map[int64]string{
+var MovieGenres = map[int64]string{
 	28:    "動作",
 	12:    "冒險",
 	16:    "動畫",

@@ -8,6 +8,25 @@ import (
 	"github.com/lib/pq"
 )
 
+var TVGenres = map[int64]string{
+	10759: "動作冒險",
+	16:    "動畫",
+	35:    "喜劇",
+	80:    "犯罪",
+	99:    "紀錄",
+	18:    "劇情",
+	10751: "家庭",
+	10762: "兒童",
+	9648:  "懸疑",
+	10763: "新聞",
+	10764: "真人秀",
+	10765: "科學奇幻",
+	10766: "肥皂劇",
+	10767: "脫口秀",
+	10768: "戰爭與政治",
+	37:    "西部",
+}
+
 type CreatedBy struct {
 	ID          int    `json:"id"`
 	CreditID    string `json:"credit_id"`
