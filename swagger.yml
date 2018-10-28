@@ -208,6 +208,8 @@ paths:
           name: sort_by
           description: sort by property
           type: string
+          default: "popularity.desc"
+          enum: ["releaseDate.desc","releaseDate.asc","popularity.desc","popularity.asc","id.desc","id.asc"]
       tags: 
         - Movie
       responses:

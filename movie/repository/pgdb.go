@@ -73,6 +73,12 @@ func (p *pgsqlRepository) BatchStore(movies []*models.Movie) error {
 	return nil
 }
 
+var movieOrder = map[string]bool{
+	"id":          true,
+	"popularity":  true,
+	"releaseDate": true,
+}
+
 func (p *pgsqlRepository) MovieList(page, limit int, order map[string]string) ([]*models.MovieIntro, *models.Page, error) {
 	if limit == 0 {
 		limit = 20
@@ -81,11 +87,25 @@ func (p *pgsqlRepository) MovieList(page, limit int, order map[string]string) ([
 		page = 1
 	}
 	db := p.Conn
-	if o, ok := order["popularity"]; ok && utils.ValidOrderType(o) {
-		db = db.Order("popularity " + o)
-	} else if od, ok := order["id"]; ok {
-		db = db.Order("id " + od)
+	oColumn, oType := "popularity", "desc"
+	for column, orderType := range order {
+		if _, ok := movieOrder[column]; !ok {
+			continue
+		}
+		if !utils.ValidOrderType(orderType) {
+			continue
+		}
+		if strings.EqualFold(column, "releaseDate") {
+			oColumn = "release_date"
+			db = db.Where("release_date IS NOT NULL")
+		} else {
+			oColumn = column
+		}
+		oType = orderType
+		break
 	}
+	db = db.Order(oColumn + " " + oType)
+
 	offset := (page - 1) * limit
 	movies := []*models.MovieIntro{}
 	var count uint

@@ -62,6 +62,7 @@ type MovieIntro struct {
 	VoteAverage   float64       `json:"vote_average"`
 	VoteCount     int           `json:"vote_count"`
 	Overview      string        `json:"overview" gorm:"type:text;not null"`
+	ReleaseDate   *time.Time    `json:"releaseDate" gorm:"type:timestamp without time zone"`
 	Directing     []PersonIntro `json:"directing" gorm:"-"`
 	Cast          []PersonIntro `json:"cast" gorm:"-"`
 }
