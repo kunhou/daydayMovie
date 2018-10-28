@@ -75,6 +75,64 @@ definitions:
         $ref: '#/definitions/Directing'
       cast:
         $ref: '#/definitions/Cast'
+  MovieDetail:
+    type: object
+    description: movie introduction
+    properties:
+      id:
+        type: integer
+        example: 2274
+        description: the ID of movie
+      title:
+        type: string
+        example: "猛毒"
+        description: 片名
+      originalTitle:
+        type: string
+        example: "Venom"
+        description: 原文片名
+      posterPath:
+        type: string
+        description: 電影海報
+        example: "/Af60AXjBCI1ZeDS2UxzWRwZ3wlY.jpg"
+      backdropPath:
+        type: string
+        description: 背景海報
+        example: "/Af60AXjBCI1ZeDS2UxzWRwZ3wlY.jpg"
+      popularity:
+        type: number
+        description: 熱門分數
+        example: 371.566
+      vote_average:
+        type: number
+        description: 投票平均分數滿分10分
+        example: 6.6
+      vote_count:
+        type: integer
+        description: 總投票數
+        example: 1583
+      adult:
+        type: boolean
+        description: 18禁
+        example: false
+      releaseDate:
+        type: string
+        description: 上映時間
+        example: "2018-10-03T00:00:00Z"
+      genre:
+        type: array
+        description: 類型
+        items:
+          type: string
+        example: ["科幻","動作","喜劇","犯罪"]
+      overview: 
+        type: string
+        description: 簡介
+        example: "索尼影業在與漫威影業合作了全新的《蜘蛛人：返校日..."
+      directing:
+        $ref: '#/definitions/Directing'
+      cast:
+        $ref: '#/definitions/Cast'
   Directing:
     type: array
     description: 導演
@@ -123,7 +181,15 @@ definitions:
           type: integer
           description: 主演順序
           example: 0
-        
+
+parameters:
+  movieID:
+    name: id
+    in: path
+    description: id of movie
+    required: true
+    type: integer
+    
 paths:
   '/movies':
     get:
@@ -160,4 +226,14 @@ paths:
                 type: array
                 items:
                   $ref: '#/definitions/MovieIntro'
-  
+  '/movies/{id}':
+    get:
+      parameters:
+        - $ref: '#/parameters/movieID'
+      tags: 
+          - Movie
+      responses:
+        '200':
+          description: 'Successful operation, return movie list'
+          schema:
+            $ref: '#/definitions/MovieDetail'
