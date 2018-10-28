@@ -26,8 +26,8 @@ func (m *MovieUsecase) BatchStore(movies []*models.Movie) error {
 	return m.movieRepos.BatchStore(movies)
 }
 
-func (m *MovieUsecase) MovieList(page, limit int, order map[string]string) ([]*models.MovieIntro, *models.Page, error) {
-	movieIntros, pageInfo, err := m.movieRepos.MovieList(page, limit, order)
+func (m *MovieUsecase) MovieList(page, limit int, order map[string]string, query map[string]interface{}) ([]*models.MovieIntro, *models.Page, error) {
+	movieIntros, pageInfo, err := m.movieRepos.MovieList(page, limit, order, query)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -101,10 +101,6 @@ func (m *MovieUsecase) MovieDetail(id uint) (*models.Movie, error) {
 	movie, err := m.movieRepos.MovieDetail(id)
 	if err != nil {
 		return nil, err
-	}
-	movie.Genres = []string{}
-	for _, id := range movie.GenreIds {
-		movie.Genres = append(movie.Genres, models.MovieGenres[id])
 	}
 	jobType := models.JobDirecting
 	movieIDs := []uint{movie.ProviderID}

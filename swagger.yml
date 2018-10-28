@@ -77,6 +77,8 @@ definitions:
         $ref: '#/definitions/Directing'
       cast:
         $ref: '#/definitions/Cast'
+      genres:
+        $ref: '#/definitions/Genres'
   MovieDetail:
     type: object
     description: movie introduction
@@ -121,12 +123,8 @@ definitions:
         type: string
         description: 上映時間
         example: "2018-10-03T00:00:00Z"
-      genre:
-        type: array
-        description: 類型
-        items:
-          type: string
-        example: ["科幻","動作","喜劇","犯罪"]
+      genres:
+        $ref: '#/definitions/Genres'
       overview: 
         type: string
         description: 簡介
@@ -183,7 +181,12 @@ definitions:
           type: integer
           description: 主演順序
           example: 0
-
+  Genres:
+    type: array
+    description: 類型
+    items:
+      type: string
+    example: ["科幻","動作","喜劇","犯罪"]
 parameters:
   movieID:
     name: id
@@ -191,27 +194,36 @@ parameters:
     description: id of movie
     required: true
     type: integer
-    
+  genres:
+    name: genres
+    in: query
+    description: genre of movies or tv, and splite by ',' eg. "犯罪,科幻"
+    type: string
+  page:
+    in: query
+    name: page
+    description: page number
+    type: integer
+    default: 1
+  pageLimit:
+    in: query
+    name: limit
+    description: results per page 
+    type: integer
+    default: 20
 paths:
   '/movies':
     get:
       parameters:
-        - in: query
-          name: page
-          description: page number
-          type: integer
-          default: 1
-        - in: query
-          name: limit
-          description: results per page 
-          type: integer
-          default: 20
+        - $ref: '#/parameters/page'
+        - $ref: '#/parameters/pageLimit'
         - in: query
           name: sort_by
           description: sort by property
           type: string
           default: "popularity.desc"
           enum: ["releaseDate.desc","releaseDate.asc","popularity.desc","popularity.asc","id.desc","id.asc"]
+        - $ref: '#/parameters/genres'
       tags: 
         - Movie
       responses:
@@ -250,10 +262,7 @@ paths:
         200:
           description: OK
           schema:
-            type: array
-            items:
-              type: string
-            example: ["犯罪","紀錄"]
+            $ref: '#/definitions/Genres'
   '/genre/tv/list':
     get:
       tags: 
@@ -263,8 +272,5 @@ paths:
         200:
           description: OK
           schema:
-            type: array
-            items:
-              type: string
-            example: ["犯罪","紀錄"]
+            $ref: '#/definitions/Genres'
               

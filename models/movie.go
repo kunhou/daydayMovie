@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 
+	"github.com/jinzhu/gorm"
 	"github.com/lib/pq"
 )
 
@@ -40,7 +41,7 @@ type Movie struct {
 	PosterPath       string        `json:"posterPath" gorm:"type:varchar(255);not null"`
 	OriginalLanguage string        `json:"-" gorm:"type:varchar(127);not null"`
 	GenreIds         pq.Int64Array `json:"-" gorm:"type:integer[];not null"`
-	Genres           []string      `json:"genre" gorm:"-"`
+	Genres           []string      `json:"genres" gorm:"-"`
 	BackdropPath     string        `json:"backdropPath" gorm:"type:varchar(255);not null"`
 	Adult            bool          `json:"adult" gorm:"not null"`
 	Overview         string        `json:"overview" gorm:"type:text;not null"`
@@ -49,6 +50,14 @@ type Movie struct {
 	Cast             []PersonIntro `json:"cast" gorm:"-"`
 	CreatedAt        time.Time     `json:"createdAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 	UpdatedAt        time.Time     `json:"updatedAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
+}
+
+func (m *Movie) AfterFind(scope *gorm.Scope) (err error) {
+	m.Genres = []string{}
+	for _, id := range m.GenreIds {
+		m.Genres = append(m.Genres, MovieGenres[id])
+	}
+	return
 }
 
 type MovieIntro struct {
@@ -65,8 +74,18 @@ type MovieIntro struct {
 	ReleaseDate   *time.Time    `json:"releaseDate" gorm:"type:timestamp without time zone"`
 	Directing     []PersonIntro `json:"directing" gorm:"-"`
 	Cast          []PersonIntro `json:"cast" gorm:"-"`
+	GenreIds      pq.Int64Array `json:"-" gorm:"type:integer[];not null"`
+	Genres        []string      `json:"genres" gorm:"-"`
 }
 
 func (MovieIntro) TableName() string {
 	return "movies"
+}
+
+func (m *MovieIntro) AfterFind(scope *gorm.Scope) (err error) {
+	m.Genres = []string{}
+	for _, id := range m.GenreIds {
+		m.Genres = append(m.Genres, MovieGenres[id])
+	}
+	return
 }

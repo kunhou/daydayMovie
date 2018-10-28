@@ -187,7 +187,7 @@ func (tu *tmdbUsecase) StartCrawlerCredit(ch chan *models.Credit, pch chan *mode
 	order := map[string]string{"popularity": "desc"}
 	p, totalPage := 1, 1
 	for {
-		movies, page, err := tu.movieRepo.MovieList(1, 100, order)
+		movies, page, err := tu.movieRepo.MovieList(1, 100, order, nil)
 		if err != nil {
 			log.WithError(err).Error("Crealer credit fail on get movies id")
 		}

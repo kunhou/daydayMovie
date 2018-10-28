@@ -72,7 +72,14 @@ func (ph *HttpMovieHandler) MovieList(c *gin.Context) {
 			orderBy[sbs[0]] = sbs[1]
 		}
 	}
-	movieList, pageInfo, err := ph.MUsecase.MovieList(page, limit, orderBy)
+	genresStr, ok := c.GetQuery("genres")
+	query := map[string]interface{}{}
+	if ok {
+		genres := strings.Split(genresStr, ",")
+		query["genres"] = genres
+	}
+
+	movieList, pageInfo, err := ph.MUsecase.MovieList(page, limit, orderBy, query)
 	if err != nil {
 		httputil.ResponseFail(c, http.StatusInternalServerError, 4001, "Internal Server error while fetching movie list", err)
 		return

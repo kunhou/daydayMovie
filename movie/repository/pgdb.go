@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -79,7 +80,7 @@ var movieOrder = map[string]bool{
 	"releaseDate": true,
 }
 
-func (p *pgsqlRepository) MovieList(page, limit int, order map[string]string) ([]*models.MovieIntro, *models.Page, error) {
+func (p *pgsqlRepository) MovieList(page, limit int, order map[string]string, query map[string]interface{}) ([]*models.MovieIntro, *models.Page, error) {
 	if limit == 0 {
 		limit = 20
 	}
@@ -103,6 +104,19 @@ func (p *pgsqlRepository) MovieList(page, limit int, order map[string]string) ([
 		}
 		oType = orderType
 		break
+	}
+	if gs, ok := query["genres"]; ok {
+		genres := gs.([]string)
+		gIDs := []string{}
+		for _, gName := range genres {
+			for id, name := range models.MovieGenres {
+				if strings.EqualFold(gName, name) {
+					gIDs = append(gIDs, strconv.Itoa(int(id)))
+					break
+				}
+			}
+		}
+		db = db.Where("genre_ids @> ARRAY[" + strings.Join(gIDs, ",") + "]")
 	}
 	db = db.Order(oColumn + " " + oType)
 
