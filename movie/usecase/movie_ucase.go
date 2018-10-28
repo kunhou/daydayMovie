@@ -98,7 +98,29 @@ func (m *MovieUsecase) MovieList(page, limit int, order map[string]string) ([]*m
 }
 
 func (m *MovieUsecase) MovieDetail(id uint) (*models.Movie, error) {
-	return m.movieRepos.MovieDetail(id)
+	movie, err := m.movieRepos.MovieDetail(id)
+	if err != nil {
+		return nil, err
+	}
+	movie.Genres = []string{}
+	for _, id := range movie.GenreIds {
+		movie.Genres = append(movie.Genres, models.Genres[id])
+	}
+	jobType := models.JobDirecting
+	movieIDs := []uint{movie.ProviderID}
+	dirPeople, err := m.movieRepos.CreditPeople(models.CastMovie, &movieIDs, nil, &jobType)
+	if err != nil {
+		return nil, errors.Wrap(err, "get directing people index")
+	}
+	movie.Directing = dirPeople
+
+	castType := models.CreditTypeCast
+	castPeople, err := m.movieRepos.CreditPeople(models.CastMovie, &movieIDs, nil, &castType)
+	if err != nil {
+		return nil, errors.Wrap(err, "get cast people index")
+	}
+	movie.Cast = castPeople
+	return movie, nil
 }
 
 func (m *MovieUsecase) TVStore(t *models.TV) (uint, error) {

@@ -16,4 +16,5 @@ type MovieRepository interface {
 	PeopleIDByProviderID(pIDs uint) (uint, error)
 	CreditStore(c *models.Credit) (uint, error)
 	CreditIndex(castType string, castIDs *[]uint, peopleIDs *[]uint, department *string) ([]*models.Credit, error)
+	CreditPeople(castType string, castIDs *[]uint, peopleIDs *[]uint, job *string) ([]models.PersonIntro, error)
 }

@@ -289,3 +289,35 @@ func (p *pgsqlRepository) CreditStore(c *models.Credit) (uint, error) {
 	}
 	return c.ID, nil
 }
+
+func (p *pgsqlRepository) CreditPeople(castType string, castIDs *[]uint, peopleIDs *[]uint, job *string) ([]models.PersonIntro, error) {
+	people := []models.PersonIntro{}
+	db := p.Conn.Table("credits").
+		Select([]string{"people.*", "credits.order"}).
+		Joins("LEFT JOIN people ON person_id = people.id")
+	if castIDs != nil {
+		ids := []int{}
+		for _, i := range *castIDs {
+			ids = append(ids, int(i))
+		}
+		db = db.Where("cast_id IN (?)", ids)
+	}
+	if peopleIDs != nil {
+		ids := []int{}
+		for _, i := range *peopleIDs {
+			ids = append(ids, int(i))
+		}
+		db = db.Where("person_id IN (?)", ids)
+	}
+	if job != nil {
+		if strings.EqualFold(*job, models.CreditTypeCast) {
+			db = db.Where("type = ?", job).Order("\"order\" ASC")
+		} else {
+			db = db.Where("job = ?", job)
+		}
+	}
+	if err := db.Find(&people).Error; err != nil && err != gorm.ErrRecordNotFound {
+		return people, err
+	}
+	return people, nil
+}

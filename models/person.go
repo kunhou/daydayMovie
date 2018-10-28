@@ -24,6 +24,7 @@ type Person struct {
 	ProfilePath        string         `json:"profilePath" gorm:"type:varchar(255);not null"`
 	Movies             []Movie        `gorm:"many2many:movie_people;association_foreignkey:id;foreignkey:id"`
 	KnownForDepartment string         `json:"knownForDepartment" gorm:"type:varchar(255);not null;default:''"`
+	Order              *uint32        `json:"order,omitempty"`
 	CreatedAt          time.Time      `json:"createdAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 	UpdatedAt          time.Time      `json:"updatedAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 }
