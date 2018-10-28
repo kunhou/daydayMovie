@@ -1,11 +1,14 @@
 package models
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/jinzhu/gorm"
 	"github.com/lib/pq"
 )
+
+const TIME_FORMAT = "2006-01-02"
 
 var MovieGenres = map[int64]string{
 	28:    "動作",
@@ -45,11 +48,11 @@ type Movie struct {
 	BackdropPath     string        `json:"backdropPath" gorm:"type:varchar(255);not null"`
 	Adult            bool          `json:"adult" gorm:"not null"`
 	Overview         string        `json:"overview" gorm:"type:text;not null"`
-	ReleaseDate      *time.Time    `json:"releaseDate" gorm:"type:timestamp without time zone"`
+	ReleaseDate      *time.Time    `json:"-" gorm:"type:timestamp without time zone"`
 	Directing        []PersonIntro `json:"directing" gorm:"-"`
 	Cast             []PersonIntro `json:"cast" gorm:"-"`
-	CreatedAt        time.Time     `json:"createdAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
-	UpdatedAt        time.Time     `json:"updatedAt,omitempty" gorm:"type:timestamp without time zone;not null;default:'now()'"`
+	CreatedAt        time.Time     `json:"-" gorm:"type:timestamp without time zone;not null;default:'now()'"`
+	UpdatedAt        time.Time     `json:"-" gorm:"type:timestamp without time zone;not null;default:'now()'"`
 }
 
 func (m *Movie) AfterFind(scope *gorm.Scope) (err error) {
@@ -58,6 +61,22 @@ func (m *Movie) AfterFind(scope *gorm.Scope) (err error) {
 		m.Genres = append(m.Genres, MovieGenres[id])
 	}
 	return
+}
+
+func (m *Movie) MarshalJSON() ([]byte, error) {
+	type Alias Movie
+	var releaseDate *string
+	if m.ReleaseDate != nil {
+		r := m.ReleaseDate.Format(TIME_FORMAT)
+		releaseDate = &r
+	}
+	return json.Marshal(&struct {
+		*Alias
+		ReleaseDate *string `json:"releaseDate"`
+	}{
+		Alias:       (*Alias)(m),
+		ReleaseDate: releaseDate,
+	})
 }
 
 type MovieIntro struct {
@@ -88,4 +107,20 @@ func (m *MovieIntro) AfterFind(scope *gorm.Scope) (err error) {
 		m.Genres = append(m.Genres, MovieGenres[id])
 	}
 	return
+}
+
+func (m *MovieIntro) MarshalJSON() ([]byte, error) {
+	type Alias MovieIntro
+	var releaseDate *string
+	if m.ReleaseDate != nil {
+		r := m.ReleaseDate.Format(TIME_FORMAT)
+		releaseDate = &r
+	}
+	return json.Marshal(&struct {
+		*Alias
+		ReleaseDate *string `json:"releaseDate"`
+	}{
+		Alias:       (*Alias)(m),
+		ReleaseDate: releaseDate,
+	})
 }
