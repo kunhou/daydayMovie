@@ -118,6 +118,12 @@ func (p *pgsqlRepository) MovieList(page, limit int, order map[string]string, qu
 		}
 		db = db.Where("genre_ids @> ARRAY[" + strings.Join(gIDs, ",") + "]")
 	}
+	if releaseYear, ok := query["releaseYear"]; ok {
+		ry := releaseYear.(int)
+		startDate := fmt.Sprintf("%d-01-01 00:00:00", ry)
+		endDate := fmt.Sprintf("%d-01-01 00:00:00", ry+1)
+		db = db.Where("release_date >= ? AND release_date < ?", startDate, endDate)
+	}
 	db = db.Order(oColumn + " " + oType)
 
 	offset := (page - 1) * limit

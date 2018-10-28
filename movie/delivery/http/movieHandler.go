@@ -78,6 +78,15 @@ func (ph *HttpMovieHandler) MovieList(c *gin.Context) {
 		genres := strings.Split(genresStr, ",")
 		query["genres"] = genres
 	}
+	releaseYear, ok := c.GetQuery("releaseYear")
+	if ok {
+		ry, err := strconv.Atoi(releaseYear)
+		if err != nil {
+			httputil.ResponseFail(c, http.StatusBadRequest, 4000, "releaseYear Format Error", err)
+			return
+		}
+		query["releaseYear"] = ry
+	}
 
 	movieList, pageInfo, err := ph.MUsecase.MovieList(page, limit, orderBy, query)
 	if err != nil {

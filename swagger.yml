@@ -122,7 +122,7 @@ definitions:
       releaseDate:
         type: string
         description: 上映時間
-        example: "2018-10-03T00:00:00Z"
+        example: "2018-10-03"
       genres:
         $ref: '#/definitions/Genres'
       overview: 
@@ -211,6 +211,11 @@ parameters:
     description: results per page 
     type: integer
     default: 20
+  movieReleaseYear:
+    in: query
+    name: releaseYear
+    description: the release year of movie eq. 2000
+    type: integer
 paths:
   '/movies':
     get:
@@ -224,6 +229,7 @@ paths:
           default: "popularity.desc"
           enum: ["releaseDate.desc","releaseDate.asc","popularity.desc","popularity.asc","id.desc","id.asc"]
         - $ref: '#/parameters/genres'
+        - $ref: '#/parameters/movieReleaseYear'
       tags: 
         - Movie
       responses:
